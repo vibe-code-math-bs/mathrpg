@@ -8,14 +8,22 @@
  disc=Mastery, hatch=Rust, numeral; arc rotated via SVG transform attr per design spec
  §5 bugfix), plus masteryDepthFromXP/isSkillRusting/BRANCH_LABELS/refreshCurrentScreen
  helpers. log.js has the full Log modal (unit type -> skill grouped by branch -> source
- w/ auto tier weight -> optional note -> save) wired to the §4 write fan-out verbatim
- (steps 1-11, 13), plus the foci cadence/streak update (step 9) and a reward-beat screen
- (~500ms XP count-up, stat pills, level-up pulse on skill Mastery/Overall/Class level-ups,
- focus-met line). Last-used skill/source remembered per session (not persisted) so a
- second log is tap-tap-save. Also bumped font sizes across the board (base 17px + most
- component sizes +1-1.5px) per user request this session. Next: Phase C — skills.js
- (branch specimen-card grid using skillGlyphForSkill(), synergy full-width cards, skill
- detail with editable roadmap checklist, legend box).
+ w/ auto tier weight -> quantity -> optional note -> save) wired to the §4 write fan-out,
+ plus foci cadence/streak (step 9) and a reward-beat screen (~500ms XP count-up, stat
+ pills, level-up pulse, focus-met line). Last-used skill/source remembered per session.
+ Fixed post-ship (2 rounds): (1) Notes no longer auto-bumps papersRead — explicit
+ "finishes the paper/chapter" checkbox instead. (2) GENERALIZED beyond Notes: every log
+ now has an optional "quantity" field (relabeled per unit type — pages/problems/
+ explorations/pages), defaulting to 1, that scales xp/stats/mastery/counters/heatmap
+ uniformly: xpGranted = base[unitType] x tierWeight x quantity. This is a deliberate
+ DEVIATION from the literal formula text in mathrpg-build-plan.md §3 (which didn't have
+ a quantity term) — that doc's pinned-formula section should be updated by hand to match;
+ log.js's submitLogEntry is the actual source of truth until then. notePages (Notes-type
+ quantity sum) and papersRead (the checkbox) remain separate concepts: magnitude vs.
+ completion event. core.js's COUNTER_DEFAULTS + migrateState() backfill notePages for
+ any save predating these fixes. Also bumped font sizes across the board (base 17px).
+ Next: Phase C — skills.js (branch specimen-card grid using skillGlyphForSkill(),
+ synergy full-width cards, skill detail with editable roadmap checklist, legend box).
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

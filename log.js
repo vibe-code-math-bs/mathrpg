@@ -10,6 +10,18 @@ const UNIT_TYPE_INFO = [
   { key: "exposition", name: "Exposition", desc: "writing · talks" }
 ];
 
+// How much one log entry is "worth" varies — a single Notes log might be 1 page or 10.
+// This optional quantity multiplies xp/stats/mastery/counters/heatmap uniformly
+// (mathrpg-build-plan.md §3's xpGranted formula extended to
+// `base[unitType] x tierWeight x quantity`; see the note in submitLogEntry). Defaults
+// to 1 if left blank, so a quick log behaves exactly as before.
+const UNIT_QUANTITY_INFO = {
+  notes: { label: "Pages of notes", placeholder: "e.g. 4", noun: "page", nounPlural: "pages" },
+  exercise: { label: "Number of problems", placeholder: "e.g. 3", noun: "problem", nounPlural: "problems" },
+  experiment: { label: "Number of explorations", placeholder: "e.g. 1", noun: "exploration", nounPlural: "explorations" },
+  exposition: { label: "Pages / slides written", placeholder: "e.g. 2", noun: "page", nounPlural: "pages" }
+};
+
 // Remembered across modal opens (same page load only — not persisted) so a second
 // log of the same skill/source is a tap-tap-save, per the spec's "≤3 taps" goal.
 let _lastUnitType = null;
@@ -67,7 +79,10 @@ function renderLogForm(card, state) {
   card.appendChild(title);
 
   // Local form state, prefilled from the last log this session.
-  const form = { unitType: _lastUnitType, skillId: _lastSkillId, sourceId: _lastSourceId, note: "" };
+  const form = {
+    unitType: _lastUnitType, skillId: _lastSkillId, sourceId: _lastSourceId,
+    note: "", quantity: null, paperCompleted: false
+  };
 
   /* --- Unit type --- */
   const utGrid = document.createElement("div");
@@ -83,6 +98,8 @@ function renderLogForm(card, state) {
       form.unitType = ut.key;
       utGrid.querySelectorAll(".unit-type-btn").forEach(function (b) { b.classList.remove("active"); });
       btn.classList.add("active");
+      updateQuantityField();
+      updatePaperCompleteVisibility();
       updateSaveEnabled();
     });
     utGrid.appendChild(btn);
@@ -181,6 +198,67 @@ function renderLogForm(card, state) {
     updateSaveEnabled();
   });
 
+  /* --- Quantity: how many of this unit type does this one log represent? ---
+     Always shown (defaults to 1 if left blank) — relabeled per unit type so it reads
+     naturally ("Pages of notes" / "Number of problems" / etc). This is what makes a
+     single log of 10 problems worth 10x a single log of 1 problem, instead of every
+     log being flatly worth the same XP regardless of how much was actually done. */
+  const quantityField = document.createElement("div");
+  quantityField.className = "log-field";
+
+  const quantityLabel = document.createElement("label");
+  quantityLabel.className = "field-label";
+  quantityField.appendChild(quantityLabel);
+
+  const quantityInput = document.createElement("input");
+  quantityInput.type = "number";
+  quantityInput.min = "1";
+  quantityInput.step = "1";
+  quantityInput.addEventListener("input", function () {
+    const v = parseInt(quantityInput.value, 10);
+    form.quantity = (quantityInput.value !== "" && !isNaN(v) && v >= 1) ? v : null;
+  });
+  quantityField.appendChild(quantityInput);
+
+  const quantityHint = document.createElement("p");
+  quantityHint.className = "field-hint";
+  quantityHint.textContent = "Leave blank for 1 — XP, stats, and Mastery scale with this number.";
+  quantityField.appendChild(quantityHint);
+
+  card.appendChild(quantityField);
+
+  function updateQuantityField() {
+    const info = UNIT_QUANTITY_INFO[form.unitType] || UNIT_QUANTITY_INFO.exercise;
+    quantityLabel.textContent = info.label + " (optional)";
+    quantityInput.placeholder = info.placeholder;
+  }
+  updateQuantityField();
+
+  /* --- "This finishes the paper / chapter" — Notes only --- */
+  const paperCompleteField = document.createElement("div");
+  paperCompleteField.className = "log-field notes-extra-field";
+
+  const completeRow = document.createElement("label");
+  completeRow.className = "checkbox-row";
+  const completeCheckbox = document.createElement("input");
+  completeCheckbox.type = "checkbox";
+  completeCheckbox.addEventListener("change", function () {
+    form.paperCompleted = completeCheckbox.checked;
+  });
+  const completeText = document.createElement("span");
+  completeText.className = "small-caps";
+  completeText.textContent = "This finishes the paper / chapter";
+  completeRow.appendChild(completeCheckbox);
+  completeRow.appendChild(completeText);
+  paperCompleteField.appendChild(completeRow);
+
+  card.appendChild(paperCompleteField);
+
+  function updatePaperCompleteVisibility() {
+    paperCompleteField.style.display = (form.unitType === "notes") ? "" : "none";
+  }
+  updatePaperCompleteVisibility();
+
   /* --- Note --- */
   const noteField = document.createElement("div");
   noteField.className = "log-field";
@@ -205,7 +283,10 @@ function renderLogForm(card, state) {
 
   saveBtn.addEventListener("click", function () {
     if (!(form.unitType && form.skillId && form.sourceId)) return;
-    const result = submitLogEntry(form.unitType, form.skillId, form.sourceId, form.note);
+    const result = submitLogEntry(form.unitType, form.skillId, form.sourceId, form.note, {
+      quantity: form.quantity,
+      paperCompleted: form.paperCompleted
+    });
     if (!result) return;
     _lastUnitType = form.unitType;
     _lastSkillId = form.skillId;
@@ -223,16 +304,32 @@ function buildModalCloseButton() {
   return closeBtn;
 }
 
-/* ---------- The §4 write fan-out (the engine) ---------- */
+/* ---------- The §4 write fan-out (the engine) ----------
+   EXTENDED FORMULA (post-Phase-B fix, deviates from the literal text in
+   mathrpg-build-plan.md §3): a single log entry can represent more than one atomic
+   unit of work — e.g. 10 problems solved in one sitting, not just 1. `quantity`
+   multiplies xp, stat grants, the relevant lifetime counter, and the heatmap weight,
+   uniformly, so a 10-problem log is worth 10x a 1-problem log instead of the same flat
+   amount. Defaults to 1 (unspecified) so a quick log behaves exactly as before.
+   xpGranted = base[unitType] x tierWeight x quantity.
+   NOTE: mathrpg-build-plan.md's pinned-formula section should be updated to reflect
+   this the next time it's edited — this file is the actual source of truth for now. */
 
-function submitLogEntry(unitType, skillId, sourceId, note) {
+const MAX_LOG_QUANTITY = 200; // sanity ceiling against fat-fingered entries
+
+function submitLogEntry(unitType, skillId, sourceId, note, opts) {
+  opts = opts || {};
   const state = getState();
   const skill = skillById(state, skillId);
   const source = state.sources.find(function (s) { return s.id === sourceId; });
   if (!skill || !source) return null;
 
+  const quantity = (typeof opts.quantity === "number" && opts.quantity >= 1)
+    ? Math.min(MAX_LOG_QUANTITY, Math.floor(opts.quantity))
+    : 1;
   const weight = TIER_WEIGHTS[source.tier];
-  const xp = UNIT_BASE_XP[unitType] * weight;
+  const xp = UNIT_BASE_XP[unitType] * weight * quantity;
+  const paperCompleted = (unitType === "notes" && !!opts.paperCompleted);
 
   // Snapshot "before" levels so we can detect level-ups after writing.
   const beforeOverall = overallLevelFromXP(state.lifetimeXP).level;
@@ -254,26 +351,28 @@ function submitLogEntry(unitType, skillId, sourceId, note) {
   // 4. skill mastery XP
   skill.masteryXP += xp;
 
-  // 5. stat grants (fixed unit->stat mapping, +10 flat each)
+  // 5. stat grants (fixed unit->stat mapping, +10 per unit x quantity)
   const statKeys = UNIT_STAT_MAP[unitType];
   const statsGranted = {};
   statKeys.forEach(function (k) {
-    state.stats[k] += STAT_GRANT_PER_UNIT;
-    statsGranted[k] = STAT_GRANT_PER_UNIT;
+    const granted = STAT_GRANT_PER_UNIT * quantity;
+    state.stats[k] += granted;
+    statsGranted[k] = granted;
   });
 
-  // 6. lifetime counters + totalUnits
-  // BUILD CHOICE: "Notes" = a chapter/paper read & absorbed (handoff §1), so a Notes
-  // unit also bumps papersRead — the seed data model has no separate "is this a paper"
-  // flag to key off instead.
+  // 6. lifetime counters + totalUnits — scale by quantity too, so "12 exercises"
+  // means 12 problems done, not 12 times the Log button was pressed.
+  // papersRead stays a separate opt-in (the "finishes the paper/chapter" checkbox) —
+  // a magnitude (quantity) and a completion event are different things.
   const counterKeyMap = { notes: "notes", exercise: "exercises", experiment: "experiments", exposition: "exposition" };
-  state.counters[counterKeyMap[unitType]] += 1;
-  if (unitType === "notes") state.counters.papersRead += 1;
-  state.counters.totalUnits += 1;
+  state.counters[counterKeyMap[unitType]] += quantity;
+  if (paperCompleted) state.counters.papersRead += 1;
+  if (unitType === "notes") state.counters.notePages += quantity;
+  state.counters.totalUnits += quantity;
 
-  // 7. heatmap (weighted by tier, per build-plan §4)
+  // 7. heatmap (weighted by tier x quantity, per build-plan §4 — extended)
   const today = todayISO();
-  state.dailyActivity[today] = (state.dailyActivity[today] || 0) + weight;
+  state.dailyActivity[today] = (state.dailyActivity[today] || 0) + weight * quantity;
 
   // 8. lastTouched
   const now = Date.now();
@@ -289,7 +388,8 @@ function submitLogEntry(unitType, skillId, sourceId, note) {
   // 10. push log entry
   state.log.push({
     ts: now, unitType: unitType, skillId: skillId, sourceId: sourceId,
-    note: note || "", xpGranted: xp, statsGranted: statsGranted
+    note: note || "", xpGranted: xp, statsGranted: statsGranted,
+    quantity: quantity, paperCompleted: paperCompleted
   });
 
   // 11. save + recompute levels for the reward beat
@@ -304,8 +404,11 @@ function submitLogEntry(unitType, skillId, sourceId, note) {
 
   return {
     skill: skill,
+    unitType: unitType,
     xp: xp,
     statsGranted: statsGranted,
+    quantity: quantity,
+    paperCompleted: paperCompleted,
     overallLevelUp: afterOverall.level > beforeOverall,
     overallLevel: afterOverall.level,
     masteryLevelUp: afterMastery.level > beforeMastery,
@@ -380,6 +483,19 @@ function renderRewardBeat(card, state, result) {
     pill.textContent = "+" + result.statsGranted[k] + " " + capitalize(k);
     statsRow.appendChild(pill);
   });
+  if (result.quantity && result.quantity !== 1) {
+    const qInfo = UNIT_QUANTITY_INFO[result.unitType] || UNIT_QUANTITY_INFO.exercise;
+    const qPill = document.createElement("span");
+    qPill.className = "reward-stat-pill";
+    qPill.textContent = result.quantity + " " + (result.quantity === 1 ? qInfo.noun : qInfo.nounPlural);
+    statsRow.appendChild(qPill);
+  }
+  if (result.paperCompleted) {
+    const paperPill = document.createElement("span");
+    paperPill.className = "reward-stat-pill";
+    paperPill.textContent = "Paper completed";
+    statsRow.appendChild(paperPill);
+  }
   beat.appendChild(statsRow);
 
   const levelUpLines = [];
