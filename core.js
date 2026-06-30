@@ -70,6 +70,92 @@ function titleForLevel(state, level) {
   return ladder[idx];
 }
 
+/* ---------- Branch labels (skills-seed.md branch keys -> display names) ---------- */
+
+const BRANCH_LABELS = {
+  algebra: "Algebra",
+  topology: "Topology",
+  analysis: "Analysis",
+  "number-theory": "Number Theory",
+  foundations: "Foundations / GRE",
+  diagrammatic: "Diagrammatic Algebra",
+  "math-physics": "Math Physics"
+};
+
+/* ---------- Skill glyph builder (design spec §5) ----------
+   Shared primitive: Skills, Today, Quests, Character all reuse this.
+     ring  = Level    (track + arc, length = `fraction`, 0..1)
+     disc  = Mastery  (radius 6-13px / opacity 0.3-0.7, scales with `masteryDepth` 0..1)
+     hatch = Rust      (3 diagonal strokes, only when `rusting`)
+     text  = `numeral` centered
+   Per the design spec's required bugfix: the arc is rotated via the SVG `transform`
+   attribute (not CSS transform+transform-origin), paired with pathLength="100" so
+   stroke-dasharray is a plain 0-100 percentage. */
+
+function clamp01(n) {
+  return Math.max(0, Math.min(1, n || 0));
+}
+
+function buildSkillGlyph(opts) {
+  opts = opts || {};
+  const size = opts.size || 44;
+  const fraction = clamp01(opts.fraction);
+  const arcLen = (fraction * 100).toFixed(1);
+  const numeral = (opts.numeral === undefined || opts.numeral === null) ? "" : opts.numeral;
+  const showMastery = opts.showMastery !== false;
+
+  let inner = "";
+  if (showMastery) {
+    const depth = clamp01(opts.masteryDepth);
+    const radius = 6 + depth * 7;
+    const opacity = 0.3 + depth * 0.4;
+    const fill = opts.active ? "var(--celadon)" : "var(--amber)";
+    inner += '<circle cx="22" cy="22" r="' + radius.toFixed(1) + '" fill="' + fill + '" opacity="' + opacity.toFixed(2) + '"/>';
+  }
+  if (opts.rusting) {
+    inner += '<g stroke="var(--rust)" stroke-width="1" opacity="0.75">' +
+      '<path d="M14 14 L30 30 M18 12 L32 26 M12 18 L26 32"/></g>';
+  }
+
+  return (
+    '<svg viewBox="0 0 44 44" width="' + size + '" height="' + size + '" class="skill-glyph" aria-hidden="true">' +
+    '<circle cx="22" cy="22" r="18" fill="none" stroke="var(--rule)" stroke-width="2.5" pathLength="100"/>' +
+    '<circle cx="22" cy="22" r="18" fill="none" stroke="var(--chalk)" stroke-width="2.5" ' +
+    'stroke-linecap="round" pathLength="100" stroke-dasharray="' + arcLen + ' 100" transform="rotate(-90 22 22)"/>' +
+    inner +
+    '<text x="22" y="26" text-anchor="middle" font-family="STIX Two Text, serif" font-size="11" ' +
+    'font-weight="600" fill="var(--chalk)">' + numeral + '</text>' +
+    '</svg>'
+  );
+}
+
+// Mastery "depth" (0..1) drives disc radius/opacity — normalized against a soft level-10 cap.
+function masteryDepthFromXP(xp) {
+  return clamp01(masteryLevelFromXP(xp).level / 10);
+}
+
+function isSkillRusting(state, skill) {
+  if (!skill.maintenance || !skill.lastTouched) return false;
+  const graceMs = (state.settings.graceWindowDays || 7) * 24 * 60 * 60 * 1000;
+  return (Date.now() - skill.lastTouched) > graceMs;
+}
+
+// Convenience wrapper: build a skill's full glyph straight from its state object.
+// fraction = Level / roadmap length (subtopics cleared); numeral = Level.
+function skillGlyphForSkill(state, skill, opts) {
+  opts = opts || {};
+  const maxLevel = (skill.roadmap && skill.roadmap.length) || 1;
+  return buildSkillGlyph({
+    size: opts.size,
+    fraction: skill.level / maxLevel,
+    numeral: skill.level,
+    masteryDepth: masteryDepthFromXP(skill.masteryXP),
+    active: !!opts.active,
+    rusting: isSkillRusting(state, skill),
+    showMastery: opts.showMastery
+  });
+}
+
 /* ---------- State construction ---------- */
 
 function freshState() {
@@ -265,6 +351,17 @@ function navigate(screenName) {
   }
 
   window.scrollTo(0, 0);
+}
+
+// Re-renders whichever screen is currently active, without changing tabs.
+// Used by the Log fan-out (mathrpg-build-plan.md §4 step 13) so screens reflect
+// new state immediately once they're built (Phases C-F); harmless no-op against
+// placeholders in the meantime.
+function refreshCurrentScreen() {
+  const main = document.getElementById("main");
+  if (!main) return;
+  main.innerHTML = "";
+  main.appendChild(SCREEN_RENDERERS[_currentScreen]());
 }
 
 function initRouter() {

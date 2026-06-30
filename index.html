@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
 <!-- BUILD PROGRESS
- [x] A spine   [ ] B glyph+log   [ ] C skills   [ ] D today
+ [x] A spine   [x] B glyph+log   [ ] C skills   [ ] D today
  [ ] E character   [ ] F quests   [ ] G polish
- notes: Phase A complete — spine, tokens/chrome, router between placeholder screens,
- seed.js (25 skills baked from mathRPG-skills-seed.md + sources/foci/bounties/campaign/
- titles), core.js (state schema, load/save, decay-on-load, curve helpers, persist()),
- settings.js (Export/Import/Reset working, sources & decay tuning editable). Icons are
- placeholder geometry (board + amber ring + 3-arc trefoil approximation) — fine to
- replace with real artwork later, not load-bearing. Next: Phase B — glyph builder in
- core.js (ring/disc/hatch/numeral, SVG-attribute rotation per design spec §5 bugfix)
- + log.js (Log modal wired to the §4 write fan-out + reward beat).
+ notes: Phase B complete — buildSkillGlyph()/skillGlyphForSkill() in core.js (ring=Level,
+ disc=Mastery, hatch=Rust, numeral; arc rotated via SVG transform attr per design spec
+ §5 bugfix), plus masteryDepthFromXP/isSkillRusting/BRANCH_LABELS/refreshCurrentScreen
+ helpers. log.js has the full Log modal (unit type -> skill grouped by branch -> source
+ w/ auto tier weight -> optional note -> save) wired to the §4 write fan-out verbatim
+ (steps 1-11, 13), plus the foci cadence/streak update (step 9) and a reward-beat screen
+ (~500ms XP count-up, stat pills, level-up pulse on skill Mastery/Overall/Class level-ups,
+ focus-met line). Last-used skill/source remembered per session (not persisted) so a
+ second log is tap-tap-save. Also bumped font sizes across the board (base 17px + most
+ component sizes +1-1.5px) per user request this session. Next: Phase C — skills.js
+ (branch specimen-card grid using skillGlyphForSkill(), synergy full-width cards, skill
+ detail with editable roadmap checklist, legend box).
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
