@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- BUILD PROGRESS
+ [x] A spine   [ ] B glyph+log   [ ] C skills   [ ] D today
+ [ ] E character   [ ] F quests   [ ] G polish
+ notes: Phase A complete — spine, tokens/chrome, router between placeholder screens,
+ seed.js (25 skills baked from mathRPG-skills-seed.md + sources/foci/bounties/campaign/
+ titles), core.js (state schema, load/save, decay-on-load, curve helpers, persist()),
+ settings.js (Export/Import/Reset working, sources & decay tuning editable). Icons are
+ placeholder geometry (board + amber ring + 3-arc trefoil approximation) — fine to
+ replace with real artwork later, not load-bearing. Next: Phase B — glyph builder in
+ core.js (ring/disc/hatch/numeral, SVG-attribute rotation per design spec §5 bugfix)
+ + log.js (Log modal wired to the §4 write fan-out + reward beat).
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MathRPG</title>
+
+<meta name="theme-color" content="#14211c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MathRPG">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="topbar-row">
+    <div class="wordmark">
+      <svg class="trefoil" viewBox="0 0 100 100">
+        <path d="M 46.5 80.6 L 36.8 85.1 L 27.6 85.8 L 20.0 82.8 L 15.3 76.8 L 14.1 68.8 L 16.8 60.2 L 23.3 52.1 L 32.7 46.1 L 44.3 42.8 L 56.3 42.9 L 67.8 46.3 L 77.1 52.4 L 83.3 60.4 L 86.0 69.2 L 84.7 77.0 L 79.7 83.0 L 72.2 85.8 L 62.7 85.0 L 53.1 80.3 L 44.1 72.0 L 37.4 61.3 L 33.4 49.2"/>
+        <path d="M 32.5 40.5 L 32.7 36.6 L 33.2 32.7 L 34.1 29.2 L 35.3 25.7 L 36.8 22.8 L 38.6 20.1 L 40.7 17.9 L 42.8 16.2 L 45.2 15.0 L 47.6 14.2 L 50.2 14.0 L 52.7 14.3 L 55.1 15.1 L 57.5 16.4 L 59.6 18.2 L 61.7 20.5 L 63.5 23.2 L 64.9 26.1 L 66.1 29.6 L 66.9 33.2 L 67.4 37.2 L 67.5 41.1"/>
+        <path d="M 66.5 49.8 L 66.2 51.0 L 65.9 52.2 L 65.5 53.6 L 65.2 54.8 L 64.7 56.2 L 64.3 57.4 L 63.7 58.8 L 63.3 59.9 L 62.6 61.3 L 62.1 62.4 L 61.5 63.5 L 60.8 64.8 L 60.2 65.9 L 59.4 67.2 L 58.7 68.2 L 57.9 69.4 L 57.2 70.4 L 56.3 71.6 L 55.5 72.5 L 54.6 73.6 L 53.8 74.5 L 53.0 75.3"/>
+      </svg>
+      <div class="wordmark-text">
+        <p class="wordmark-title">MathRPG</p>
+        <p class="wordmark-subtitle small-caps" id="topbar-subtitle">today</p>
+      </div>
+    </div>
+    <button id="settings-gear" aria-label="Settings">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 13a7.4 7.4 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.4 7.4 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1L11 21h4l.3-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4Z"/>
+      </svg>
+    </button>
+  </div>
+  <svg class="strand-divider" viewBox="0 0 400 12" preserveAspectRatio="none">
+    <path d="M0 6 C 30 0, 50 12, 80 6 S 130 0, 160 6 S 210 12, 240 6 S 290 0, 320 6 S 370 12, 400 6"/>
+  </svg>
+</header>
+
+<main id="main"></main>
+
+<nav id="tabbar">
+  <button class="tab-item" data-screen="today" aria-label="Today">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+    <span class="tab-label small-caps">Today</span>
+  </button>
+  <button class="tab-item" data-screen="skills" aria-label="Skills">
+    <svg viewBox="0 0 24 24"><path d="M12 2v6M12 22v-8M5 9l7-1 7 1M3 14l9 1 9-1M5 19l7-2 7 2"/></svg>
+    <span class="tab-label small-caps">Skills</span>
+  </button>
+  <div class="log-button-wrap">
+    <button id="log-button" aria-label="Log">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <span class="tab-label small-caps">Log</span>
+  </div>
+  <button class="tab-item" data-screen="quests" aria-label="Quests">
+    <svg viewBox="0 0 24 24"><path d="M5 3v18M5 4h12l-3 4 3 4H5"/></svg>
+    <span class="tab-label small-caps">Quests</span>
+  </button>
+  <button class="tab-item" data-screen="character" aria-label="Character">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4.5 5-6 8-6s6.5 1.5 8 6"/></svg>
+    <span class="tab-label small-caps">Character</span>
+  </button>
+</nav>
+
+<script src="seed.js"></script>
+<script src="core.js"></script>
+<script src="today.js"></script>
+<script src="skills.js"></script>
+<script src="quests.js"></script>
+<script src="character.js"></script>
+<script src="log.js"></script>
+<script src="settings.js"></script>
+</body>
+</html>
