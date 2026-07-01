@@ -18,12 +18,33 @@
   --amber-dim: rgba(223, 202, 144, 0.28);
   --celadon: #87b58d;
   --celadon-dim: rgba(135, 181, 141, 0.25);
-  --rust: #b0664f;
-  --rust-dim: rgba(176, 102, 79, 0.22);
+  --rust: #c47760;
+  --rust-dim: rgba(196, 119, 96, 0.22);
   --grid-size: 34px;
 }
 
 * { box-sizing: border-box; }
+
+/* ---------- Accessibility: focus + motion (Phase G) ----------
+   -webkit-tap-highlight-color:transparent below kills the default mobile tap flash,
+   so keyboard/switch-control users need an explicit, on-theme focus ring or they'd
+   get nothing at all. :focus-visible (not :focus) so mouse/touch taps stay clean and
+   only actual keyboard/assistive navigation shows the ring. */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+.skill-card:focus-visible, .add-skill-card:focus-visible, .title-row:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Respect OS-level "reduce motion" — the reward-beat pulse/fade and heatmap-scroll
+   are the only animated pieces; both degrade to an instant, static state. */
+@media (prefers-reduced-motion: reduce) {
+  .pulse, .reward-beat > * { animation: none !important; }
+  * { scroll-behavior: auto !important; }
+}
 
 html, body {
   margin: 0;
@@ -419,8 +440,8 @@ input[type="file"] { display: none; }
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 1px solid var(--rule);
   background: transparent;
@@ -781,16 +802,16 @@ textarea {
 .icon-btn {
   background: transparent;
   border: 1px solid var(--rule);
-  border-radius: 6px;
-  width: 26px;
-  height: 26px;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--chalk-dim);
   cursor: pointer;
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 17px;
   padding: 0;
 }
 .icon-btn:active { background: var(--rule-faint); }

@@ -3,7 +3,7 @@
 <head>
 <!-- BUILD PROGRESS
  [x] A spine   [x] B glyph+log   [x] C skills   [x] D today
- [x] E character   [x] F quests   [ ] G polish
+ [x] E character   [x] F quests   [x] G polish — BUILD COMPLETE
  notes: Phase F complete — quests.js (design spec §8, handoff §4/§8). Top to bottom:
  main-quest banner (Bigelow Campaign, static prose per spec); two parallel seal-
  timeline tracks (Spider / Surface) — a step is only { step, done }, so seal state is
@@ -59,10 +59,96 @@
  trips with count back at baseline; a full localStorage roundtrip confirms campaign/
  foci/bounties all persist. All green.
 
- Next: Phase G — polish (decay-rate/grace-window tuning UI in settings.js, an
- animation/juice pass, a cross-screen consistency sweep, accessibility pass — tap
- targets, contrast, aria — final manifest/icon check, then the GitHub Pages
- walkthrough per build-plan §7).
+ Phase G complete — polish. Decay-rate/grace-window tuning was already live in
+ settings.js's renderDecayCard() (built ahead of schedule during Phase A since the
+ data + Settings screen shell already existed) — verified working as-is, no changes
+ needed there.
+
+ Animation/juice pass: the Log reward beat (XP count-up + pulse on any level-up) was
+ already solid from Phase B. Added the one juice gap the handoff spec names but the
+ build hadn't covered — §9③'s "celebratory pulse on any level-up... or subtopic
+ clear" for the OTHER path to a Level-up: manually checking a roadmap subtopic in
+ Skill Detail (skills.js), outside the Log flow entirely. renderRoadmapRow's checkbox
+ handler now snapshots skill.level before mutating, and renderSkillDetail() takes an
+ optional opts.pulseLevelUp flag that adds .pulse to the header glyph wrapper — same
+ pulseGlow keyframe as the reward beat, no new CSS, so it reads as the same "unit of
+ celebration" language everywhere it appears. Unchecking a subtopic (a correction, not
+ an achievement) does not pulse. Also added a prefers-reduced-motion media query
+ (styles.css) that kills .pulse/.reward-beat animations for anyone with that OS
+ setting — the only two animated things in the app besides the heatmap's native
+ horizontal scroll, which prefers-reduced-motion also flips to instant via
+ scroll-behavior:auto.
+
+ Accessibility pass: (1) contrast — computed WCAG contrast ratios for every token pair
+ in actual use (script, not eyeballed); everything cleared AA except --rust on
+ --board/--board-deep at 3.84:1/4.12:1 (rust text is small-caps ~16.5px, i.e. "normal"
+ text needing 4.5:1, not "large" text's 3:1). Brightened --rust from #b0664f to
+ #c47760 (same hue, ~1.3 stops lighter) and derived --rust-dim from it — now
+ 4.87:1/5.22:1 on both backgrounds. Single token change, propagates everywhere rust is
+ used (rust alerts, danger button, pill-rust, status-err) with no other edits needed.
+ (2) tap targets — the shared .icon-btn class (rename/delete pencils and ×'s, reused
+ across skills.js roadmap rows + New Skill modal, quests.js milestones/foci/bounties,
+ character.js name-edit) was 26px; bumped to 32px. .modal-close (the × on every modal)
+ was 30px; bumped to 34px to match #settings-gear's existing 34px. Both are shared
+ classes, so this is a single CSS edit each, not a per-call-site change — confirmed via
+ grep that every icon-only button in the app routes through one of these two classes,
+ so the sweep is exhaustive, not spot-fixes. Decorative (non-interactive) elements —
+ .unit-checkbox, .title-badge, the heatmap-day cells — were left alone; they're inside
+ a larger tappable row/button already or aren't tappable at all. (3) aria — audited
+ every document.createElement("button") call across all 7 screen/support files;
+ icon-only buttons already carried aria-label from Phases B-F (close, rename, remove,
+ archive, restore, mark-done, etc. — 22 instances, all present); text-bearing buttons
+ don't need one. No gaps found. Added on-theme :focus-visible outlines (2px solid
+ --amber, offset 2px) for keyboard/switch-control users — the existing
+ -webkit-tap-highlight-color:transparent (needed to kill the mobile tap flash) had the
+ side effect of leaving keyboard focus completely invisible with zero custom style to
+ replace it; this was the one real gap, not previously covered by any phase.
+ DEFERRED (noted, not fixed): form <label>s are visually adjacent to their
+ input/select but not programmatically linked via for/id — true for/id wiring across
+ ~12 <select>s and every dynamically-generated roadmap/bounty/milestone row would mean
+ generating collision-safe unique ids per repeated row across 4 files for a marginal
+ screen-reader gain (adjacent-in-DOM-order text is usually announced as context
+ regardless); judged not worth the added surface area on a single-user app. Revisit if
+ that judgment turns out wrong in practice.
+
+ Cross-screen consistency sweep: grepped every className usage in JS against
+ styles.css's selector list looking for typos/dead references. Found three
+ intentional unstyled marker classes (log.js's "notes-extra-field", quests.js's
+ "track-card", skills.js's "skills-wrap") — all are companion classes riding on an
+ already-styled primary class (e.g. "log-field notes-extra-field"), not bugs.
+ Specifically checked whether skills.js's .skills-wrap was missing the
+ ".X-wrap .card:last-of-type { margin-bottom }" pattern that today/character/quests
+ all have — it is, but Skills never renders a bare .card as a direct child (it uses
+ .branch-section/.legend-box instead, which already carry their own spacing), so
+ there's nothing for that rule to apply to; not a real gap. Confirmed ESC-to-close is
+ implemented on every modal (log, skill detail, add-skill, focus, bounty) — already
+ consistent from Phases B/C/F, no changes needed.
+
+ Manifest/icon check: manifest.webmanifest's two icon entries match the actual PNG
+ dimensions (192×192, 512×512, both 8-bit RGB) exactly; start_url/scope are relative
+ ("./"), display:standalone, theme/background colors match the chalkboard tokens.
+ apple-mobile-web-app-capable + apple-touch-icon are set in index.html's <head>. No
+ changes needed — this was solid from Phase A.
+
+ Verified with an extended jsdom smoke test (all 5 screens render, Log modal opens/
+ submits/closes end-to-end with real XP written to a fresh in-memory state, Skill
+ Detail opens, a real subtopic toggle raises Level by exactly 1 and fires the new
+ pulse class, styles.css is linked) — 15/15 green both before and after every edit in
+ this phase. Also did a full visual QA pass: launched the machine's cached headless
+ Chrome via puppeteer-core against the actual index.html at a 390×844 (Android-phone)
+ viewport and screenshotted Today/Skills/Quests/Character/Settings/Skill-Detail —
+ confirmed the chalkboard system, glyphs, and new tap-target sizing all render intact
+ with no layout breaks from the CSS changes.
+
+ GitHub Pages walkthrough: written up in README.md (click-by-click, per build-plan
+ §7) rather than duplicated here — this file is getting long and the walkthrough has
+ no build-phase content of its own to track.
+
+ THE BUILD IS COMPLETE (Phases A-G). All 13 site files are final:
+ index.html, styles.css, seed.js, core.js, log.js, today.js, skills.js, quests.js,
+ character.js, settings.js, manifest.webmanifest, icon-192.png, icon-512.png.
+ Any further work from here is real user-driven iteration (new content, new features,
+ bug reports from actual use), not remaining build-plan phases.
 
  --- prior phase notes below ---
  Phase C complete — skills.js. renderSkills() groups state.skills by branch

@@ -576,7 +576,8 @@ function closeSkillDetail() {
   refreshCurrentScreen();
 }
 
-function renderSkillDetail(card, skillId) {
+function renderSkillDetail(card, skillId, opts) {
+  opts = opts || {};
   var state = getState();
   var skill = skillById(state, skillId);
   card.innerHTML = "";
@@ -631,6 +632,7 @@ function renderSkillDetail(card, skillId) {
   var pct = clamp01(masteryInfo.xpIntoLevel / masteryInfo.xpForNextLevel);
 
   var glyphWrap = document.createElement("div");
+  glyphWrap.className = opts.pulseLevelUp ? "pulse" : "";
   glyphWrap.innerHTML = skillGlyphForSkill(state, skill, { size: 72, active: isSkillActive(state, skill) });
   summary.appendChild(glyphWrap);
 
@@ -786,10 +788,11 @@ function renderRoadmapRow(card, skillId, item, idx) {
   checkbox.addEventListener("change", function () {
     var state = getState();
     var skill = skillById(state, skillId);
+    var beforeLevel = skill.level;
     skill.roadmap[idx].done = checkbox.checked;
     recomputeSkillLevel(skill);
     saveState();
-    renderSkillDetail(card, skillId);
+    renderSkillDetail(card, skillId, { pulseLevelUp: skill.level > beforeLevel });
   });
   row.appendChild(checkbox);
 
