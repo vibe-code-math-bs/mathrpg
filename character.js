@@ -173,12 +173,13 @@ function renderClassLevelsRow(state) {
    polygon. Coordinates via real trig (design spec §9.4): angle = -pi/2 + i*(2pi/6),
    point = center + r*(cos,sin) — i=0 (Technique) sits at 12 o'clock, then clockwise.
 
-   Normalization: each axis is scaled against the *current max stat value* (floor 1,
-   to avoid divide-by-zero on a fresh tree), not a fixed absolute cap. Stats are
-   cumulative and open-ended, so there's no natural ceiling to pin the chart to — this
-   keeps the polygon's *shape* (relative balance across modes of work) legible at any
-   point in the tree's growth, which is what a radar chart is for. Absolute totals are
-   already covered by the Lifetime counters below it. */
+   Normalization: the polygon's *shape* is still scaled against the current max stat
+   value (floor 1, to avoid divide-by-zero on a fresh tree) — Stats are cumulative and
+   open-ended, so there's no natural ceiling to pin the radii to, and shape (relative
+   balance across modes of work) is what a radar chart is for. But per request, each
+   axis label now also prints the actual number beside it (amber, tabular figures),
+   so the chart isn't relative-only — you can read exact totals off it directly instead
+   of cross-referencing the Lifetime counters card below. */
 
 var RADAR_STAT_ORDER = ["technique", "rigor", "abstraction", "intuition", "exposition", "literature"];
 var RADAR_STAT_LABELS = {
@@ -188,7 +189,7 @@ var RADAR_STAT_LABELS = {
 
 function buildStatsRadarSVG(stats) {
   var n = RADAR_STAT_ORDER.length;
-  var cx = 150, cy = 150, maxR = 96;
+  var cx = 175, cy = 175, maxR = 118; // bigger than the original 150/150/96
 
   var maxVal = 1;
   RADAR_STAT_ORDER.forEach(function (k) {
@@ -200,7 +201,7 @@ function buildStatsRadarSVG(stats) {
     return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
   }
 
-  var svg = '<svg viewBox="0 0 300 300" class="radar-svg" aria-hidden="true">';
+  var svg = '<svg viewBox="0 0 350 350" class="radar-svg" aria-hidden="true">';
 
   // Grid rings
   [0.33, 0.66, 1.0].forEach(function (frac) {
@@ -229,16 +230,21 @@ function buildStatsRadarSVG(stats) {
   svg += '<polygon points="' + dataPts.join(" ") + '" fill="var(--amber)" fill-opacity="0.18" ' +
     'stroke="var(--amber)" stroke-width="1.6"/>';
 
-  // Axis labels, just outside each tip
+  // Axis labels + actual numeric values, just outside each tip (one <text>, two
+  // <tspan>s so anchor alignment still treats "Technique 340" as a single unit).
   for (var i = 0; i < n; i++) {
-    var lp = pointAt(i, maxR + 22);
+    var lp = pointAt(i, maxR + 24);
     var anchor = "middle";
     if (lp[0] < cx - 4) anchor = "end";
     else if (lp[0] > cx + 4) anchor = "start";
+    var key = RADAR_STAT_ORDER[i];
+    var val = stats[key] || 0;
     svg += '<text x="' + lp[0].toFixed(1) + '" y="' + lp[1].toFixed(1) + '" text-anchor="' + anchor +
-      '" dominant-baseline="middle" font-family="STIX Two Text, serif" font-size="9.5" ' +
-      'font-variant="small-caps" letter-spacing="0.4" fill="var(--chalk-dim)">' +
-      RADAR_STAT_LABELS[RADAR_STAT_ORDER[i]] + '</text>';
+      '" dominant-baseline="middle" font-family="STIX Two Text, serif">' +
+      '<tspan font-size="10" font-variant="small-caps" letter-spacing="0.4" fill="var(--chalk-dim)">' +
+      RADAR_STAT_LABELS[key] + '</tspan>' +
+      '<tspan dx="6" font-size="11.5" font-weight="600" fill="var(--amber)" ' +
+      'style="font-variant-numeric: tabular-nums lining-nums;">' + val + '</tspan></text>';
   }
 
   svg += '</svg>';

@@ -174,6 +174,41 @@
  tapping a rank (incl. jumping straight to the top rank "Professor" from a low-XP
  state) updates state.currentTitle, re-renders with exactly one row marked selected,
  and updates the level row's title text; localStorage roundtrip confirmed. All green.
+ POST-E TWEAK (requested): Stats radar enlarged (cx/cy/maxR 150/150/96 -> 175/175/118,
+ viewBox 300x300 -> 350x350, CSS max-width 320px -> 380px) and each axis label now
+ also prints the actual stat number beside it (amber, tabular figures, via a second
+ <tspan> in the same <text> so text-anchor still treats "Technique 340" as one unit)
+ — the polygon's radii are still normalized to the current max stat for legible shape,
+ but the chart is no longer relative-only since the real numbers are printed right on
+ it. Verified via jsdom: viewBox/CSS values updated, all six numeric values present
+ in the rendered SVG alongside their labels.
+ POST-E FEATURE (requested, amends "Unit->stat contributions are FIXED" from the
+ handoff's hard-rules list — see the AMENDMENT comment at the top of log.js's fan-out
+ for the full text; that comment is now the source of truth on this point since the
+ project's .md docs are read-only from here): skills may optionally carry
+ skill.statBonus = { stat, amount } | null (core.js: STAT_KEYS/STAT_LABELS added as
+ the canonical shared list). When set, EVERY log against that skill — any of the 4
+ unit types — adds amount x quantity to that one stat on top of the fixed unit->stat
+ grant (log.js step 5.5, merges into the same statsGranted bucket the reward beat
+ already renders generically, so no reward-beat changes were needed). Confirmed via
+ the actual code (not just the build-plan doc) that the existing fixed stat grant is
+ quantity-only with no tier weight, so the bonus matches that — flat, NOT tier-scaled.
+ Off by default for every skill (opt-in). Editable in two places: Skill Detail
+ (skills.js — a "Stat bonus" section between the synergy note and the Roadmap header:
+ a None/6-stat select + a number input that appears once a stat is picked, select
+ commits immediately, amount commits on blur/Enter, matches the app's existing
+ inline-edit pattern) and the New Skill modal (same select+amount pair, between the
+ maintenance checkbox and the starting-roadmap textarea, baked into the skill object
+ at creation time). New shared CSS: .stat-bonus-row/.stat-bonus-amount in styles.css.
+ Verified with two jsdom passes: (1) feature-specific — no bonus behaves identically
+ to pre-existing behavior; setting a bonus via Skill Detail's select+amount and
+ confirming state.statBonus; all 4 unit types trigger it with the correct fixed+bonus
+ total; research-tier and undergrad-tier logs grant the identical stat total (proving
+ no tier-scaling); quantity multiplies the bonus; clearing back to "None" removes it;
+ creating a brand-new skill with a bonus set at creation time works end to end;
+ localStorage roundtrip. (2) regression pass — notePages, the title picker, the
+ enlarged/numeric radar, the Skills grid, and basic logging all still behave exactly
+ as before this change. All green on both.
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

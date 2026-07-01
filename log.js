@@ -319,8 +319,18 @@ function buildModalCloseButton() {
    uniformly, so a 10-problem log is worth 10x a 1-problem log instead of the same flat
    amount. Defaults to 1 (unspecified) so a quick log behaves exactly as before.
    xpGranted = base[unitType] x tierWeight x quantity.
-   NOTE: mathrpg-build-plan.md's pinned-formula section should be updated to reflect
-   this the next time it's edited — this file is the actual source of truth for now. */
+
+   AMENDMENT (post-Phase-E, user-requested — deviates from "Unit->stat contributions
+   are FIXED" in the handoff's hard-rules list): a skill may optionally carry
+   skill.statBonus = { stat, amount } | null. When set, EVERY log against that skill
+   (any of the 4 unit types) also adds amount x quantity to that one stat, on top of
+   the fixed unit->stat grant below — NOT tier-scaled, matching the fixed grant's own
+   quantity-only scaling (confirmed there's no tier weight on the existing stat grant
+   before adding this). Off by default for every skill; set per-skill in Skill Detail
+   or at creation time in the New Skill modal (skills.js).
+   NOTE: mathrpg-build-plan.md's pinned-formula section and the handoff's hard-rules
+   list should be updated to reflect both of the above the next time they're edited —
+   this file is the actual source of truth for now. */
 
 const MAX_LOG_QUANTITY = 200; // sanity ceiling against fat-fingered entries
 
@@ -366,6 +376,17 @@ function submitLogEntry(unitType, skillId, sourceId, note, opts) {
     state.stats[k] += granted;
     statsGranted[k] = granted;
   });
+
+  // 5.5. optional per-skill stat bonus (user-set, off by default) — see AMENDMENT
+  // above. Fires on every unit type, merges into the same statsGranted bucket so the
+  // reward beat's generic "+N <Stat>" pills (built by iterating statsGranted's own
+  // keys) show the combined total with no changes needed there.
+  if (skill.statBonus && STAT_KEYS.indexOf(skill.statBonus.stat) !== -1 && skill.statBonus.amount > 0) {
+    const bonusKey = skill.statBonus.stat;
+    const bonusGranted = skill.statBonus.amount * quantity;
+    state.stats[bonusKey] += bonusGranted;
+    statsGranted[bonusKey] = (statsGranted[bonusKey] || 0) + bonusGranted;
+  }
 
   // 6. lifetime counters + totalUnits — scale by quantity too, so "12 exercises"
   // means 12 problems done, not 12 times the Log button was pressed.

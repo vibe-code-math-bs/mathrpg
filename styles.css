@@ -1053,7 +1053,7 @@ textarea {
 
 /* Stats radar */
 .radar-card { text-align: center; }
-.radar-svg { width: 100%; max-width: 320px; height: auto; margin-top: 4px; }
+.radar-svg { width: 100%; max-width: 380px; height: auto; margin-top: 4px; }
 
 /* Lifetime counters + attributes grids */
 .counter-grid, .attr-grid {
@@ -1113,3 +1113,14 @@ textarea {
   padding: 3px 9px;
   font-size: 13.5px;
 }
+
+/* Stat bonus picker (Skill Detail + New Skill modal) */
+.stat-bonus-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.stat-bonus-row select { width: auto; flex: 1 1 140px; }
+.stat-bonus-row .stat-bonus-amount { width: 64px; flex: 0 0 auto; text-align: center; }
+.stat-bonus-row .small-caps { color: var(--chalk-dim); flex: 0 0 auto; }

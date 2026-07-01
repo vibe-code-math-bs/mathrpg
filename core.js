@@ -23,6 +23,17 @@ const UNIT_STAT_MAP = {
 
 const STAT_GRANT_PER_UNIT = 10;
 
+// Canonical stat key list + display labels — shared source for anything that needs
+// to enumerate the 6 Stats generically (currently: skills.js's stat-bonus picker,
+// log.js's stat-bonus validation). character.js keeps its own small local copy
+// (RADAR_STAT_ORDER/RADAR_STAT_LABELS) per the file-local-helpers convention, since
+// it predates this and already works — not worth touching for a pure refactor.
+const STAT_KEYS = ["technique", "rigor", "abstraction", "intuition", "exposition", "literature"];
+const STAT_LABELS = {
+  technique: "Technique", rigor: "Rigor", abstraction: "Abstraction",
+  intuition: "Intuition", exposition: "Exposition", literature: "Literature"
+};
+
 // XP to go from level n -> n+1 for a single skill's mastery curve: 100 * (n+1)
 // Given cumulative masteryXP, find the mastery level + progress to next.
 function masteryLevelFromXP(xp) {

@@ -294,7 +294,8 @@ function renderAddSkillForm(card, state) {
   var branches = getBranchOrder(state);
   var form = {
     name: "", branch: branches.length ? branches[0].id : "__new__",
-    newBranchName: "", classTag: "math", maintenance: false, roadmapText: ""
+    newBranchName: "", classTag: "math", maintenance: false, roadmapText: "",
+    bonusStat: "", bonusAmount: 5
   };
 
   /* Name */
@@ -371,6 +372,56 @@ function renderAddSkillForm(card, state) {
   maintField.appendChild(maintRow);
   card.appendChild(maintField);
 
+  /* Stat bonus (optional, off by default) — see AMENDMENT in log.js's fan-out
+     docstring. Flat, not tier-scaled, fires on every unit type logged against this
+     skill once created. */
+  var bonusField = document.createElement("div");
+  bonusField.className = "log-field";
+  bonusField.innerHTML = '<label class="field-label">Stat bonus (optional)</label>';
+  var bonusRow = document.createElement("div");
+  bonusRow.className = "stat-bonus-row";
+  var bonusSelect = document.createElement("select");
+  var noneOpt = document.createElement("option");
+  noneOpt.value = "";
+  noneOpt.textContent = "None";
+  bonusSelect.appendChild(noneOpt);
+  STAT_KEYS.forEach(function (k) {
+    var opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = STAT_LABELS[k];
+    bonusSelect.appendChild(opt);
+  });
+  var bonusAmountInput = document.createElement("input");
+  bonusAmountInput.type = "number";
+  bonusAmountInput.min = "1";
+  bonusAmountInput.max = "50";
+  bonusAmountInput.value = "5";
+  bonusAmountInput.className = "stat-bonus-amount";
+  bonusAmountInput.style.display = "none";
+  var bonusSuffix = document.createElement("span");
+  bonusSuffix.className = "small-caps";
+  bonusSuffix.textContent = "\u00d7 quantity, every log";
+  bonusSuffix.style.display = "none";
+  bonusSelect.addEventListener("change", function () {
+    form.bonusStat = bonusSelect.value;
+    var show = !!form.bonusStat;
+    bonusAmountInput.style.display = show ? "" : "none";
+    bonusSuffix.style.display = show ? "" : "none";
+  });
+  bonusAmountInput.addEventListener("input", function () {
+    var n = parseInt(bonusAmountInput.value, 10);
+    form.bonusAmount = (isFinite(n) && n >= 1) ? Math.min(50, n) : 5;
+  });
+  bonusRow.appendChild(bonusSelect);
+  bonusRow.appendChild(bonusAmountInput);
+  bonusRow.appendChild(bonusSuffix);
+  bonusField.appendChild(bonusRow);
+  var bonusHint = document.createElement("p");
+  bonusHint.className = "field-hint";
+  bonusHint.textContent = "Adds a flat amount to one stat on every log against this skill, any unit type, on top of the usual grant.";
+  bonusField.appendChild(bonusHint);
+  card.appendChild(bonusField);
+
   /* Starting roadmap */
   var roadmapField = document.createElement("div");
   roadmapField.className = "log-field";
@@ -413,7 +464,8 @@ function renderAddSkillForm(card, state) {
       roadmap: roadmap,
       level: level,
       masteryXP: 0,
-      lastTouched: null
+      lastTouched: null,
+      statBonus: form.bonusStat ? { stat: form.bonusStat, amount: form.bonusAmount } : null
     };
     state.skills.push(newSkill);
     saveState();
@@ -563,6 +615,72 @@ function renderSkillDetail(card, skillId) {
     syn.innerHTML = '<div><p class="synergy-label small-caps">Synergy</p><p class="synergy-text">' + escapeHtml(skill.synergyNote) + '</p></div>';
     card.appendChild(syn);
   }
+
+  /* Stat bonus (optional, off by default) — see AMENDMENT in log.js's fan-out
+     docstring. Flat, not tier-scaled, fires on every unit type logged against this
+     skill, on top of the fixed unit->stat grant. */
+  var bonusHeader = document.createElement("p");
+  bonusHeader.className = "detail-section-header";
+  bonusHeader.textContent = "Stat bonus";
+  card.appendChild(bonusHeader);
+
+  var bonusHint = document.createElement("p");
+  bonusHint.className = "field-hint";
+  bonusHint.style.margin = "0 0 8px";
+  bonusHint.textContent = "Optional. Adds a flat amount to one stat on every log against this skill, any unit type, on top of the usual grant.";
+  card.appendChild(bonusHint);
+
+  var detailBonusRow = document.createElement("div");
+  detailBonusRow.className = "stat-bonus-row";
+
+  var detailBonusSelect = document.createElement("select");
+  var detailNoneOpt = document.createElement("option");
+  detailNoneOpt.value = "";
+  detailNoneOpt.textContent = "None";
+  detailBonusSelect.appendChild(detailNoneOpt);
+  STAT_KEYS.forEach(function (k) {
+    var opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = STAT_LABELS[k];
+    detailBonusSelect.appendChild(opt);
+  });
+  detailBonusSelect.value = (skill.statBonus && skill.statBonus.stat) || "";
+
+  var detailBonusAmount = document.createElement("input");
+  detailBonusAmount.type = "number";
+  detailBonusAmount.min = "1";
+  detailBonusAmount.max = "50";
+  detailBonusAmount.value = (skill.statBonus && skill.statBonus.amount) || 5;
+  detailBonusAmount.className = "stat-bonus-amount";
+  detailBonusAmount.style.display = skill.statBonus ? "" : "none";
+
+  var detailBonusSuffix = document.createElement("span");
+  detailBonusSuffix.className = "small-caps";
+  detailBonusSuffix.textContent = "\u00d7 quantity, every log";
+  detailBonusSuffix.style.display = skill.statBonus ? "" : "none";
+
+  detailBonusSelect.addEventListener("change", function () {
+    var v = detailBonusSelect.value;
+    skill.statBonus = v ? { stat: v, amount: (skill.statBonus && skill.statBonus.amount) || 5 } : null;
+    saveState();
+    renderSkillDetail(card, skillId);
+  });
+
+  function commitDetailBonusAmount() {
+    if (!skill.statBonus) return;
+    var n = parseInt(detailBonusAmount.value, 10);
+    if (!isFinite(n) || n < 1) n = 1;
+    skill.statBonus.amount = Math.min(50, n);
+    saveState();
+    renderSkillDetail(card, skillId);
+  }
+  detailBonusAmount.addEventListener("blur", commitDetailBonusAmount);
+  detailBonusAmount.addEventListener("keydown", function (e) { if (e.key === "Enter") detailBonusAmount.blur(); });
+
+  detailBonusRow.appendChild(detailBonusSelect);
+  detailBonusRow.appendChild(detailBonusAmount);
+  detailBonusRow.appendChild(detailBonusSuffix);
+  card.appendChild(detailBonusRow);
 
   /* Roadmap — full CRUD, not just checkboxes */
   var roadmapHeader = document.createElement("p");
