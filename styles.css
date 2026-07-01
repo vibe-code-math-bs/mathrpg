@@ -1114,13 +1114,25 @@ textarea {
   font-size: 13.5px;
 }
 
-/* Stat bonus picker (Skill Detail + New Skill modal) */
+/* Stat bonuses editor — a list of existing bonus rows (label + amount + remove) plus
+   a separate add-row (select of remaining stats + button). Skill Detail + New Skill
+   modal both use renderStatBonusesEditor() (skills.js), same markup either way. */
 .stat-bonus-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule-faint);
 }
-.stat-bonus-row select { width: auto; flex: 1 1 140px; }
+.stat-bonus-row:last-of-type { border-bottom: none; }
+.stat-bonus-label { flex: 1; font-size: 15.5px; font-weight: 500; }
 .stat-bonus-row .stat-bonus-amount { width: 64px; flex: 0 0 auto; text-align: center; }
-.stat-bonus-row .small-caps { color: var(--chalk-dim); flex: 0 0 auto; }
+.stat-bonus-suffix { color: var(--chalk-dim); flex: 0 0 auto; white-space: nowrap; }
+.stat-bonus-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.stat-bonus-add-row select { width: auto; flex: 1 1 auto; }
+.stat-bonus-add-row .btn { flex: 0 0 auto; }

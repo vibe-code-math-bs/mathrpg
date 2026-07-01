@@ -215,9 +215,26 @@ function loadState() {
   } else {
     _state = freshState();
   }
+  migrateStatBonuses(_state);
   applyDecay(_state);
   saveState();
   return _state;
+}
+
+// One-time migration (post-first-cut-of-the-stat-bonus-feature, superseded within the
+// same session by the multi-bonus revision below): any already-saved skill carrying
+// the old singular skill.statBonus = {stat,amount} gets folded into the new
+// skill.statBonuses = [{stat,amount}, ...] array so a bonus someone had already set
+// up isn't silently lost. Also just guarantees every skill has a statBonuses array
+// (defaulting to []) so log.js/skills.js never need to null-check it themselves.
+function migrateStatBonuses(state) {
+  (state.skills || []).forEach(function (skill) {
+    if (skill.statBonus && !skill.statBonuses) {
+      skill.statBonuses = [skill.statBonus];
+    }
+    if (!skill.statBonuses) skill.statBonuses = [];
+    delete skill.statBonus;
+  });
 }
 
 function saveState() {

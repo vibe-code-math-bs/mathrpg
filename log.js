@@ -322,12 +322,17 @@ function buildModalCloseButton() {
 
    AMENDMENT (post-Phase-E, user-requested — deviates from "Unit->stat contributions
    are FIXED" in the handoff's hard-rules list): a skill may optionally carry
-   skill.statBonus = { stat, amount } | null. When set, EVERY log against that skill
-   (any of the 4 unit types) also adds amount x quantity to that one stat, on top of
-   the fixed unit->stat grant below — NOT tier-scaled, matching the fixed grant's own
+   skill.statBonuses = [{ stat, amount }, ...] (defaults to [], guaranteed present by
+   core.js's migrateStatBonuses() on every load — one entry per stat max, so at most 6).
+   When set, EVERY entry fires on EVERY log against that skill (any of the 4 unit
+   types), each adding amount x quantity to its one stat, on top of the fixed
+   unit->stat grant below — NOT tier-scaled, matching the fixed grant's own
    quantity-only scaling (confirmed there's no tier weight on the existing stat grant
-   before adding this). Off by default for every skill; set per-skill in Skill Detail
-   or at creation time in the New Skill modal (skills.js).
+   before adding this). REVISION: this started as a single skill.statBonus object,
+   then was widened to a list per a follow-up request — a skill can now carry bonuses
+   on several different stats at once (e.g. Real Analysis: +5 Technique AND +3 Rigor).
+   Off by default for every skill; set per-skill in Skill Detail or at creation time
+   in the New Skill modal (skills.js's shared renderStatBonusesEditor()).
    NOTE: mathrpg-build-plan.md's pinned-formula section and the handoff's hard-rules
    list should be updated to reflect both of the above the next time they're edited —
    this file is the actual source of truth for now. */
@@ -377,16 +382,17 @@ function submitLogEntry(unitType, skillId, sourceId, note, opts) {
     statsGranted[k] = granted;
   });
 
-  // 5.5. optional per-skill stat bonus (user-set, off by default) — see AMENDMENT
-  // above. Fires on every unit type, merges into the same statsGranted bucket so the
-  // reward beat's generic "+N <Stat>" pills (built by iterating statsGranted's own
-  // keys) show the combined total with no changes needed there.
-  if (skill.statBonus && STAT_KEYS.indexOf(skill.statBonus.stat) !== -1 && skill.statBonus.amount > 0) {
-    const bonusKey = skill.statBonus.stat;
-    const bonusGranted = skill.statBonus.amount * quantity;
-    state.stats[bonusKey] += bonusGranted;
-    statsGranted[bonusKey] = (statsGranted[bonusKey] || 0) + bonusGranted;
-  }
+  // 5.5. optional per-skill stat bonuses (user-set, off by default, now a LIST) —
+  // see AMENDMENT above. Every entry fires on every unit type, merges into the same
+  // statsGranted bucket so the reward beat's generic "+N <Stat>" pills (built by
+  // iterating statsGranted's own keys) show the combined total with no changes
+  // needed there, regardless of how many bonuses are stacked.
+  (skill.statBonuses || []).forEach(function (bonus) {
+    if (!bonus || STAT_KEYS.indexOf(bonus.stat) === -1 || !(bonus.amount > 0)) return;
+    const bonusGranted = bonus.amount * quantity;
+    state.stats[bonus.stat] += bonusGranted;
+    statsGranted[bonus.stat] = (statsGranted[bonus.stat] || 0) + bonusGranted;
+  });
 
   // 6. lifetime counters + totalUnits — scale by quantity too, so "12 exercises"
   // means 12 problems done, not 12 times the Log button was pressed.

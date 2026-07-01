@@ -209,6 +209,36 @@
  localStorage roundtrip. (2) regression pass — notePages, the title picker, the
  enlarged/numeric radar, the Skills grid, and basic logging all still behave exactly
  as before this change. All green on both.
+ POST-E REVISION (requested): the stat bonus feature above was widened from ONE bonus
+ per skill to MULTIPLE. skill.statBonus (singular object) -> skill.statBonuses (array
+ of {stat,amount}, at most one entry per stat since a duplicate is just the same entry
+ with a bigger number). core.js gained migrateStatBonuses(state), called at the top of
+ loadState(): folds any already-saved singular skill.statBonus into a one-item
+ statBonuses array, deletes the old field, and guarantees every skill has a
+ statBonuses array (defaulting to []) so log.js/skills.js never null-check it — this
+ matters because last session's build could already be sitting in someone's browser
+ localStorage with the old singular shape. log.js's fan-out step 5.5 now
+ .forEach()s the array instead of checking one object; same rules per entry (every
+ unit type, flat, not tier-scaled, x quantity), still merges into the shared
+ statsGranted bucket so the reward beat needed zero changes regardless of how many
+ bonuses are stacked. skills.js: replaced the two separate single-bonus UI blocks
+ (New Skill form + Skill Detail) with one shared renderStatBonusesEditor(container,
+ list, onChange) — renders existing bonuses as label+amount+remove rows (amount
+ commits on blur/Enter, remove is immediate) plus a trailing add-row whose <select>
+ only offers stats not already used on that skill (so it's structurally impossible to
+ create two rows for the same stat), replaced by a "all 6 stats already have a bonus"
+ message once maxed out. Skill Detail's onChange persists immediately (saveState());
+ the New Skill modal's onChange just updates local form state until "Create skill".
+ New/changed CSS: .stat-bonus-row is now a label/amount/remove row (was select+amount
+ for the old single-bonus version), .stat-bonus-add-row is the new select+button row.
+ Verified with a dedicated jsdom pass: migration from a simulated old-format save
+ (old field removed, converted to a 1-item array, untouched skills get a safe []);
+ two bonuses on one skill both fire together on a single log, correctly isolated from
+ the fixed unit->stat grant; Skill Detail flow — add two different bonuses, edit one's
+ amount, remove the other, fill all 6 stats and confirm the add-row disappears with
+ the maxed-out message; New Skill modal — create a skill with two bonuses set at
+ creation time, both present on the saved skill. Plus a full regression pass (fresh
+ state shape, title picker, radar, Skills grid, plain no-bonus logging) — all green.
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
