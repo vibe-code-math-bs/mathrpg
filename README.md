@@ -1,4 +1,4 @@
-vibe coded bullshit for self-use.
+# vibe coded bullshit for self-use.
 
 # MathRPG
 
