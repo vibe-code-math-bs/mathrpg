@@ -1136,3 +1136,97 @@ textarea {
 }
 .stat-bonus-add-row select { width: auto; flex: 1 1 auto; }
 .stat-bonus-add-row .btn { flex: 0 0 auto; }
+
+/* ---------- Quests screen (Phase F) ---------- */
+
+.quests-wrap .card:last-of-type { margin-bottom: 14px; }
+
+.quest-banner {
+  border: 1px solid var(--amber-dim);
+  border-radius: 12px;
+  padding: 18px 16px;
+  text-align: center;
+  margin-bottom: 20px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(223, 202, 144, 0.10), transparent 70%);
+}
+.quest-banner-eyebrow { color: var(--amber); margin: 0 0 6px; }
+.quest-banner-title { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
+.quest-banner-desc { font-size: 16px; color: var(--chalk-dim); margin: 0; line-height: 1.45; }
+
+.track-meter { color: var(--chalk-dim); white-space: nowrap; }
+
+/* Seal-timeline (Spider / Surface tracks) */
+.timeline { margin: 2px 0 4px; }
+.timeline-row { display: flex; gap: 14px; padding-bottom: 18px; }
+.timeline-row:last-child { padding-bottom: 2px; }
+.timeline-seal-col {
+  position: relative;
+  flex: 0 0 auto;
+  display: block;
+  line-height: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.seal-glyph { display: block; }
+.timeline-thread {
+  position: absolute;
+  top: 46px;
+  bottom: -18px;
+  left: 50%;
+  width: 1px;
+  background: var(--rule);
+  transform: translateX(-50%);
+}
+.timeline-text { flex: 1; min-width: 0; padding-top: 5px; }
+.timeline-title-row { display: flex; align-items: center; gap: 6px; }
+.timeline-title { flex: 1; font-size: 16.5px; font-weight: 500; }
+.timeline-title-input {
+  flex: 1;
+  font-size: 16.5px;
+  background: var(--board-deep);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 4px 6px;
+  color: var(--chalk);
+  font-family: inherit;
+}
+.timeline-status { margin: 3px 0 0; }
+.timeline-status.status-complete { color: var(--amber); }
+.timeline-status.status-in-progress { color: var(--celadon); }
+.timeline-status.status-available { color: var(--chalk-dim); }
+
+/* Bosses */
+.boss-row { gap: 10px; cursor: pointer; }
+.boss-row input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--amber);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.boss-row-text { flex: 1; font-size: 16.5px; }
+.boss-row-text.done { color: var(--chalk-dim); text-decoration: line-through; }
+/* .status-ok already defined above (Settings, Phase A) — reused as-is for "done". */
+
+/* Foci management (row shell reused from today.js's .focus-row; this adds the
+   Log/Edit/Archive action cluster that Today's read-only version doesn't have) */
+.focus-row-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+
+/* Bounty board */
+.bounty-grid { margin-top: 4px; }
+.bounty-card {
+  position: relative;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 12px 30px 12px 12px;
+}
+.bounty-remove { position: absolute; top: 8px; right: 8px; }
+.bounty-title { font-size: 15px; font-weight: 500; margin: 6px 0 6px; line-height: 1.3; }
+.bounty-title.done { color: var(--chalk-dim); text-decoration: line-through; }
+.bounty-sub { color: var(--chalk-dim); margin: 0 0 8px; }
+.bounty-reward { color: var(--amber); margin: 0 0 10px; }
+.bounty-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.bounty-actions .btn { flex: 1 1 auto; padding: 7px 10px; font-size: 14.5px; min-width: 76px; }

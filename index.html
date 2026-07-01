@@ -3,8 +3,69 @@
 <head>
 <!-- BUILD PROGRESS
  [x] A spine   [x] B glyph+log   [x] C skills   [x] D today
- [x] E character   [ ] F quests   [ ] G polish
- notes: Phase C complete — skills.js. renderSkills() groups state.skills by branch
+ [x] E character   [x] F quests   [ ] G polish
+ notes: Phase F complete — quests.js (design spec §8, handoff §4/§8). Top to bottom:
+ main-quest banner (Bigelow Campaign, static prose per spec); two parallel seal-
+ timeline tracks (Spider / Surface) — a step is only { step, done }, so seal state is
+ DERIVED at render time (campaignStepStatus()): done -> "complete" (full amber ring +
+ filled disc + chalk checkmark), the first not-done step -> "in progress" (partial
+ celadon arc, fixed at a representative 55% since there's no literal sub-progress to
+ measure), everything after that -> "available" (dim rule-only ring, no disc, never a
+ padlock — tapping any seal toggles it regardless of position). Milestones are fully
+ editable per build-plan §2.5: tap the seal to toggle done, pencil to rename inline
+ (same input-swap pattern as skills.js), × to remove (confirm()), an add-row at the
+ bottom of each track. Bosses are simple checkbox rows only (design spec §8.3's literal
+ scope — not in §2.5's customization list, so no add/rename/remove there, unlike the
+ two tracks). Foci gets its own full CRUD card here (Today's focus-row stays the
+ read-only quick-log surface) — add/edit share one modal (openFocusModal(existingFocus
+ || null)), archive is a direct toggle, and archived foci get a small restorable list
+ underneath (the spec says "archivable" but never rules out undoing it, and a one-way
+ archive felt like an unnecessary trap). Bounty board reuses skills.js's 2-col
+ .skill-grid layout (no glyph, per spec): each card shows a status pill, title, tier +
+ target-skill line, and an amber reward-preview line (UNIT_BASE_XP × TIER_WEIGHTS at
+ quantity 1, from core.js — a preview only, since the real grant depends on whatever
+ source gets picked at log time). "Check off" toggles a bounty directly; "Log" opens
+ the Log modal prefilled with { unitType, skillId, bountyId }.
+
+ log.js touched minimally (one addition): openLogModal's prefill shape gained an
+ optional bountyId: a successful save now auto-checks that bounty off, satisfying
+ handoff §4's "check off, OR convert a bounty into a log entry" — logging IS the
+ conversion. Manual check-off is a separate direct toggle that never touches log.js.
+
+ FLAGGED DEVIATION (not silent): handoff §8 says completing a campaign step "grants
+ Mastery to the relevant diagrammatic skill + stats as appropriate," but the pinned
+ data model (§11) gives campaign steps no skillId/stat link to drive that from, and
+ building a second XP-granting pathway outside log.js's single fan-out (build-plan §4)
+ risked a second, divergent source of truth for XP/Mastery. Campaign steps (and
+ Bosses) are narrative checkboxes only for now — real Mastery still only comes from
+ actually logging units. Worth revisiting if a direct skillId link is wanted later.
+
+ New shared-ish helpers local to quests.js per the one-file-per-screen convention:
+ escapeHtml/buildCloseButton (identical copies, same as character.js/skills.js).
+ questSlug/uniqueQuestId are deliberately NOT named slugify/uniqueSkillId — those
+ globals from skills.js are used elsewhere, and every file shares one global scope
+ (plain <script> tags, not modules), so reusing the exact name would have silently
+ overwritten them.
+
+ Verified with a jsdom smoke test (concatenate-then-single-eval per the Phase D
+ gotcha, then a hand-fired DOMContentLoaded): all 4 screens still render after the
+ addition; seal-glyph status derivation confirmed against the seeded spiderTrack
+ (2 done, 2 not -> complete/complete/in-progress/available); toggle-seal, add/rename/
+ remove a milestone all persist correctly; a Boss checkbox toggles; the full Foci
+ CRUD loop (add -> edit/rename -> archive -> restore -> delete) round-trips correctly
+ with the active/archived counts back at baseline; the full Bounty loop (add -> check
+ off -> reopen -> Log-button hands off to the Log modal prefilled and correctly unit-
+ type-selected -> saving a real log entry auto-checks the bounty off -> remove) round-
+ trips with count back at baseline; a full localStorage roundtrip confirms campaign/
+ foci/bounties all persist. All green.
+
+ Next: Phase G — polish (decay-rate/grace-window tuning UI in settings.js, an
+ animation/juice pass, a cross-screen consistency sweep, accessibility pass — tap
+ targets, contrast, aria — final manifest/icon check, then the GitHub Pages
+ walkthrough per build-plan §7).
+
+ --- prior phase notes below ---
+ Phase C complete — skills.js. renderSkills() groups state.skills by branch
  (getBranchOrder() walks SEED_BRANCHES first, then appends any branches the user has
  since created), each branch a <section> with a header row (name + optional tag +
  "subtopics N/total" completion meter) over a 2-col specimen-card grid

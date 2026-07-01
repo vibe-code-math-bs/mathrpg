@@ -30,10 +30,12 @@ let _lastSourceId = null;
 
 /* ---------- Modal lifecycle ---------- */
 
-// Optional `prefill` = { unitType, skillId, sourceId } — used by Today's per-focus
-// quick-log shortcuts (Phase D) to jump straight into a mostly-filled form instead of
-// making the person reselect what a focus already implies. Falls back to the normal
-// _last* session memory for anything prefill doesn't specify.
+// Optional `prefill` = { unitType, skillId, sourceId, bountyId } — used by Today's
+// per-focus quick-log shortcuts (Phase D) to jump straight into a mostly-filled form
+// instead of making the person reselect what a focus already implies, and by Quests'
+// bounty cards (Phase F, quests.js) to do the same plus auto-check the bounty off on
+// a successful save (see the PHASE F comment on the save handler below). Falls back
+// to the normal _last* session memory for anything prefill doesn't specify.
 function openLogModal(prefill) {
   if (document.getElementById("log-modal-overlay")) return;
 
@@ -298,6 +300,16 @@ function renderLogForm(card, state, prefill) {
     _lastUnitType = form.unitType;
     _lastSkillId = form.skillId;
     _lastSourceId = form.sourceId;
+    // PHASE F: a bounty's "Log" button (quests.js) prefills { ..., bountyId } so
+    // completing the log also checks the bounty off — the "convert into a log entry"
+    // half of handoff §4's "check off, or convert a bounty into a log entry." Manual
+    // check-off (the other half) is a direct toggle on the bounty card and never
+    // reaches this file.
+    if (prefill && prefill.bountyId) {
+      const st = getState();
+      const bounty = st.bounties.find(function (b) { return b.id === prefill.bountyId; });
+      if (bounty) { bounty.done = true; saveState(); refreshCurrentScreen(); }
+    }
     renderRewardBeat(card, getState(), result);
   });
 }
