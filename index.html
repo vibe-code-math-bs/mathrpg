@@ -3,7 +3,7 @@
 <head>
 <!-- BUILD PROGRESS
  [x] A spine   [x] B glyph+log   [x] C skills   [x] D today
- [ ] E character   [ ] F quests   [ ] G polish
+ [x] E character   [ ] F quests   [ ] G polish
  notes: Phase C complete — skills.js. renderSkills() groups state.skills by branch
  (getBranchOrder() walks SEED_BRANCHES first, then appends any branches the user has
  since created), each branch a <section> with a header row (name + optional tag +
@@ -108,6 +108,51 @@
  synergy-card wash) so they stay in sync with the new root tokens. Everywhere else
  in the app references these via var(--amber)/var(--celadon), so no JS changes
  were needed.
+ Phase E complete — character.js. renderCharacter() top to bottom: identity block
+ (centered player name, inline-editable via the same pencil->input->blur/Enter
+ pattern as Skill Detail rename in skills.js; a fixed class line reading "Class:
+ Diagrammatic Algebraist (provisional)" — the literal design-spec §9.1 example, not
+ a computed heuristic, since it names the user's actual research direction), level
+ row (64px glyph reused from core.js's buildSkillGlyph — ring = progress to next
+ Overall Level, disc forced amber per spec by passing active:false, numeral =
+ Overall Level — beside "Level X · Title" / big xp-into-level number / small-caps
+ "xp to Level X+1" caption), class levels row (Mathematician Lv / Physicist Lv, side
+ by side, both-tagged skills feed both in full per log.js step 3), a 6-axis stats
+ radar (buildStatsRadarSVG — real trig per design spec §9.4, angle = -pi/2 +
+ i*(2pi/6), nested --rule rings at 33/66/100%, --rule-faint spokes, one --amber data
+ polygon; each axis normalized against the current max stat value rather than a
+ fixed cap, since Stats are open-ended — the Lifetime counters grid below already
+ covers absolute totals, so the radar's job is just relative shape), Lifetime
+ counters (2-col grid: exercises/notes/experiments/exposition/papersRead/totalUnits),
+ Attributes (2-col grid: Total mastery = sum of every skill's Mastery *level*, Skills
+ rusting = count via core.js's isSkillRusting, Active synergies = count of skills
+ carrying a synergyNote — matching skills.js's own "glow whenever synergyNote is
+ present" simplification rather than computing live prereq state, Longest streak =
+ longest consecutive-day run over all of dailyActivity, not just the current one),
+ and Titles earned (row list, one badge per ladder rank already reached, using
+ core.js's existing titleForLevel threshold — one rank per 3 Overall Levels).
+ RECONCILIATION: design spec's Level row (badge + xp text + title beside it) and the
+ handoff's "Lv 7 · Title with a bar to next level" describe the same info; per
+ build-plan §2 the design spec's layout wins, and the glyph's own ring arc serves as
+ the "bar" rather than adding a redundant separate one.
+ Found-and-fixed one real pre-existing bug while wiring up counters: log.js's fan-out
+ incremented state.counters.notePages, but freshState() never initialized that field,
+ so it silently went NaN on the very first "notes" log. Fixed in both places —
+ freshState() now seeds notePages:0, and log.js's increment is defensively guarded
+ (`|| 0`) so any already-saved pre-Phase-E state self-heals on the next log instead
+ of staying corrupted.
+ Verified with a jsdom smoke test that awaits the real DOMContentLoaded event (not a
+ manual loadState() call) so the exact real init/router path is exercised: page load
+ -> Today auto-renders -> click the Character tab -> Character renders with correct
+ active/subtitle state -> rename the player -> log one of each unit type via the real
+ submitLogEntry() and confirm XP/stats/counters/notePages all update correctly with
+ no NaN -> force a skill into rusting range and confirm the Attributes card reflects
+ it -> feed a non-contiguous dailyActivity history and confirm longest-streak picks
+ the actual longest run, not the most recent one -> push lifetimeXP to Overall Level
+ 6 and confirm exactly the 3 correctly-thresholded titles appear -> localStorage
+ roundtrip. All green.
+ Next: Phase F — quests.js (Bigelow main-quest banner, two parallel track
+ seal-timelines, Bosses, Foci management add/edit/archive, Bounty board grid).
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

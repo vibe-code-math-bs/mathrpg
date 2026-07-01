@@ -167,7 +167,7 @@ function freshState() {
     lifetimeXP: 0,
     classXP: { math: 0, physics: 0 },
     titlesLadder: SEED_TITLES_LADDER.slice(),
-    counters: { exercises: 0, notes: 0, experiments: 0, exposition: 0, papersRead: 0, totalUnits: 0 },
+    counters: { exercises: 0, notes: 0, experiments: 0, exposition: 0, papersRead: 0, totalUnits: 0, notePages: 0 },
     dailyActivity: {},
     stats: { technique: 0, rigor: 0, abstraction: 0, intuition: 0, exposition: 0, literature: 0 },
     skills: JSON.parse(JSON.stringify(SEED)),

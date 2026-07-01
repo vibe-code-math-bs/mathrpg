@@ -374,7 +374,7 @@ function submitLogEntry(unitType, skillId, sourceId, note, opts) {
   const counterKeyMap = { notes: "notes", exercise: "exercises", experiment: "experiments", exposition: "exposition" };
   state.counters[counterKeyMap[unitType]] += quantity;
   if (paperCompleted) state.counters.papersRead += 1;
-  if (unitType === "notes") state.counters.notePages += quantity;
+  if (unitType === "notes") state.counters.notePages = (state.counters.notePages || 0) + quantity;
   state.counters.totalUnits += quantity;
 
   // 7. heatmap (weighted by tier x quantity, per build-plan §4 — extended)
