@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <!-- BUILD PROGRESS
- [x] A spine   [x] B glyph+log   [x] C skills   [ ] D today
+ [x] A spine   [x] B glyph+log   [x] C skills   [x] D today
  [ ] E character   [ ] F quests   [ ] G polish
  notes: Phase C complete — skills.js. renderSkills() groups state.skills by branch
  (getBranchOrder() walks SEED_BRANCHES first, then appends any branches the user has
@@ -50,6 +50,47 @@
  the Level-ring half of the skill glyph, foci-due rows, rust alerts reusing
  isSkillRusting()/isSkillActive() from skills.js, today's logged units, daily-haul
  roll-up, quick-log shortcuts).
+ Phase D complete — today.js, in design-spec §7 order: ① activity heatmap (53-week
+ Sun-Sat CSS grid, grid-auto-flow:column so a flat day list lands in the right
+ columns automatically, month labels via a parallel same-width grid, horizontal
+ auto-scroll-to-today via a setTimeout(0) after the card is appended since scrollWidth
+ isn't meaningful pre-attach); ② date hero; ③ streak row (current Sun-Sat week, dots
+ + a separately-computed unbounded streak count — "today has no activity yet" doesn't
+ zero the streak, it just starts counting from yesterday); ④ XP strip (buildSkillGlyph
+ directly, showMastery:false, against overallLevelFromXP — deliberately bypasses
+ skillGlyphForSkill since this is the character curve, not a per-skill one); ⑤ foci
+ due now (focusState() open-codes the same cadence-window math as log.js's
+ updateFocusOnLog rather than importing it, per the one-file-per-screen convention;
+ each row is its own quick-log shortcut); ⑥ rust alerts (reuses core.js's
+ isSkillRusting() + skillGlyphForSkill() as-is; the whole card is omitted, not just
+ emptied, when nothing is rusting); ⑦ today's logged units (today's state.log entries
+ — always renders the checkbox filled/checked since these are completed reps, not a
+ todo list; no "pending" case exists without an invented daily-quota system); ⑧ daily
+ haul callout (BUILD CHOICE / deviation: the handoff's example line has a "subtopics
+ cleared today" clause that isn't trackable — skills.js's roadmap checks carry no
+ timestamp — so this substitutes a "N units logged" count instead; same "make today's
+ logging feel like an amount" spirit, honest about what's actually measured).
+ log.js touched minimally: openLogModal(prefill) and renderLogForm(..., prefill) now
+ accept an optional {unitType, skillId, sourceId} to seed the form, falling back to
+ the existing _last* session memory when omitted — this is what lets a Today focus
+ row's "Log" button jump straight into a mostly-filled form. No other Phase B/C files
+ changed.
+ Verified with an extended jsdom smoke test (concatenate-then-single-eval, not
+ sequential per-file evals — separate window.eval() calls don't share top-level
+ const/let bindings the way sibling <script> tags in one document do, which is a
+ test-harness gotcha, not an app bug): heatmap cell count (53×7), today-cell marking,
+ streak dot count, rust card appears only for a backdated maintenance skill, empty-
+ state copy on both the logged-units card and the haul box before any log today,
+ then drives an actual focus quick-log end-to-end (click Log -> modal opens with
+ unit-type/skill pre-selected from the focus -> pick a source -> save -> reward beat
+ -> Done) and re-renders Today to confirm the new entry shows up in the logged-units
+ list, the haul line, and the focus's "met" state, plus a localStorage round-trip
+ check. All green.
+ Next: Phase E — character.js (identity header, overall level + title with bar,
+ side-by-side Mathematician/Physicist class levels via classLevelFromXP(), the
+ 6-axis Stats radar computed with real trig per design spec §9④ — technique/rigor/
+ abstraction/intuition/exposition/literature from state.stats, never decays —
+ lifetime counters grid, attribute cards, titles-earned list via titleForLevel()).
  Post-C tweaks: (1) buildSkillGlyph() (core.js) — the Level ring's arc now renders
  celadon instead of chalk-white once fraction>=1 (every roadmap subtopic done),
  applies wherever the shared glyph is used (Skills cards/detail, log.js preview +

@@ -30,7 +30,11 @@ let _lastSourceId = null;
 
 /* ---------- Modal lifecycle ---------- */
 
-function openLogModal() {
+// Optional `prefill` = { unitType, skillId, sourceId } — used by Today's per-focus
+// quick-log shortcuts (Phase D) to jump straight into a mostly-filled form instead of
+// making the person reselect what a focus already implies. Falls back to the normal
+// _last* session memory for anything prefill doesn't specify.
+function openLogModal(prefill) {
   if (document.getElementById("log-modal-overlay")) return;
 
   const state = getState();
@@ -48,7 +52,7 @@ function openLogModal() {
   document.addEventListener("keydown", _escListener);
 
   document.body.appendChild(overlay);
-  renderLogForm(card, state);
+  renderLogForm(card, state, prefill || null);
 }
 
 function _escListener(e) {
@@ -63,7 +67,7 @@ function closeLogModal() {
 
 /* ---------- Step 1: the form ---------- */
 
-function renderLogForm(card, state) {
+function renderLogForm(card, state, prefill) {
   card.innerHTML = "";
 
   card.appendChild(buildModalCloseButton());
@@ -78,9 +82,12 @@ function renderLogForm(card, state) {
   title.textContent = "What did you do?";
   card.appendChild(title);
 
-  // Local form state, prefilled from the last log this session.
+  // Local form state — prefilled from an explicit `prefill` (a focus's quick-log
+  // shortcut) when given, else from the last log this session.
   const form = {
-    unitType: _lastUnitType, skillId: _lastSkillId, sourceId: _lastSourceId,
+    unitType: (prefill && prefill.unitType) || _lastUnitType,
+    skillId: (prefill && prefill.skillId) || _lastSkillId,
+    sourceId: (prefill && prefill.sourceId) || _lastSourceId,
     note: "", quantity: null, paperCompleted: false
   };
 
