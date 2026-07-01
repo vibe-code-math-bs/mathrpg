@@ -14,10 +14,10 @@
   --chalk-dim: #9aa39a;
   --rule: rgba(233, 230, 218, 0.14);
   --rule-faint: rgba(233, 230, 218, 0.07);
-  --amber: #d9a86a;
-  --amber-dim: rgba(217, 168, 106, 0.28);
-  --celadon: #8fb7a0;
-  --celadon-dim: rgba(143, 183, 160, 0.25);
+  --amber: #dfca90;
+  --amber-dim: rgba(223, 202, 144, 0.28);
+  --celadon: #87b58d;
+  --celadon-dim: rgba(135, 181, 141, 0.25);
   --rust: #b0664f;
   --rust-dim: rgba(176, 102, 79, 0.22);
   --grid-size: 34px;
@@ -565,7 +565,7 @@ textarea {
 
 .reward-levelup {
   border: 1px solid var(--amber-dim);
-  background: rgba(217, 168, 106, 0.08);
+  background: rgba(223, 202, 144, 0.08);
   border-radius: 10px;
   padding: 10px 12px;
   margin-bottom: 16px;
@@ -586,9 +586,9 @@ textarea {
 }
 
 @keyframes pulseGlow {
-  0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(217, 168, 106, 0)); }
-  45% { transform: scale(1.14); filter: drop-shadow(0 0 7px rgba(217, 168, 106, 0.6)); }
-  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(217, 168, 106, 0)); }
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(223, 202, 144, 0)); }
+  45% { transform: scale(1.14); filter: drop-shadow(0 0 7px rgba(223, 202, 144, 0.6)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(223, 202, 144, 0)); }
 }
 .pulse { animation: pulseGlow 0.65s ease-out; }
 
@@ -698,7 +698,7 @@ textarea {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  background: rgba(143, 183, 160, 0.05);
+  background: rgba(135, 181, 141, 0.05);
 }
 .synergy-card .skill-glyph { flex-shrink: 0; }
 .synergy-label { font-size: 14.5px; color: var(--celadon); margin: 0 0 4px; }

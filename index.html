@@ -61,6 +61,12 @@
  .skill-card-name's min-height:2.6em) auto-adjusts, no manual follow-up needed there.
  (3) Requested again, larger — another flat +2px across all 48 font-size
  declarations (base now 20px) plus the glyph numeral 12->14, same reasoning as (2).
+ (4) styles.css only — retuned --amber (#d9a86a->#dfca90, paler/yellower, less
+ "Claude-coral") and --celadon (#8fb7a0->#87b58d, greener/less blue), plus the
+ hardcoded rgba() echoes of both (reward-levelup wash, pulseGlow drop-shadow,
+ synergy-card wash) so they stay in sync with the new root tokens. Everywhere else
+ in the app references these via var(--amber)/var(--celadon), so no JS changes
+ were needed.
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
