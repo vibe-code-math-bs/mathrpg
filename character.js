@@ -3,7 +3,13 @@
    (handoff §9 ⑤, design spec §9). Top to bottom: identity block (name + class line),
    level row (badge + xp text + title), class levels (Mathematician/Physicist, side by
    side), 6-axis stats radar (real trig per design spec §9.4), lifetime counters grid,
-   attributes grid, titles-earned list.
+   attributes grid, title picker.
+
+   CORRECTION (post-Phase-E): titles are NOT level-unlocked. Level (in-app XP) and
+   Title (real-life academic standing) are deliberately decoupled — the user picks
+   whichever ladder rank actually matches where they are, from a plain selectable
+   list; nothing here computes or gates it off Overall Level. state.currentTitle
+   holds the pick; core.js's getCurrentTitle() reads it with a safe fallback.
 
    RECONCILIATION: the handoff's Identity header ("Lv 7 · Title, with a bar to next
    level") and the design spec's more detailed Level row (badge + xp number + title
@@ -15,7 +21,7 @@
    Small helpers (escapeHtml/clamp01-adjacent) are duplicated here rather than imported
    from other screen files, per build-plan §1's one-file-per-screen convention.
    isSkillRusting, buildSkillGlyph, masteryLevelFromXP, overallLevelFromXP,
-   classLevelFromXP, titleForLevel, clamp01 are genuinely shared and already live in
+   classLevelFromXP, getCurrentTitle, clamp01 are genuinely shared and already live in
    core.js. */
 
 function escapeHtml(str) {
@@ -37,7 +43,7 @@ function renderCharacter() {
   wrap.appendChild(renderStatsRadarCard(state));
   wrap.appendChild(renderLifetimeCountersCard(state));
   wrap.appendChild(renderAttributesCard(state));
-  wrap.appendChild(renderTitlesEarnedCard(state));
+  wrap.appendChild(renderTitlePickerCard(state));
 
   return wrap;
 }
@@ -109,7 +115,7 @@ function renderLevelRow(state) {
   card.className = "card level-row";
 
   var info = overallLevelFromXP(state.lifetimeXP);
-  var title = titleForLevel(state, info.level);
+  var title = getCurrentTitle(state);
 
   var glyphWrap = document.createElement("div");
   glyphWrap.innerHTML = buildSkillGlyph({
@@ -359,41 +365,55 @@ function renderAttributesCard(state) {
   return card;
 }
 
-/* ---------- ⑦ Titles earned ----------
-   Simple row list (not cards) per design spec §9.7. Threshold matches core.js's
-   titleForLevel (one rank every 3 Overall Levels): title i is earned once Overall
-   Level >= i*3. */
+/* ---------- ⑦ Title picker ----------
+   Titles are picked by the user, not unlocked by Level — every ladder rank is always
+   selectable (consistent with the app's "no gating" rule elsewhere, just applied to a
+   different axis: real-life standing instead of skill prereqs). Tapping a row sets
+   state.currentTitle and re-renders; the currently-selected rank gets a filled badge
+   + "current" tag, everything else a plain outline badge. */
 
-var TITLE_BADGE_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L14.2 9.2 L20.8 9.5 L15.6 13.6 L17.4 20 ' +
-  'L12 16.2 L6.6 20 L8.4 13.6 L3.2 9.5 L9.8 9.2 Z" fill="none" stroke="var(--amber)" stroke-width="1.4" ' +
-  'stroke-linejoin="round"/></svg>';
+function titleBadgeSVG(selected) {
+  var stroke = selected ? "var(--amber)" : "var(--chalk-dim)";
+  var fill = selected ? "var(--amber)" : "none";
+  var fillOpacity = selected ? "0.22" : "1";
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L14.2 9.2 L20.8 9.5 L15.6 13.6 L17.4 20 ' +
+    'L12 16.2 L6.6 20 L8.4 13.6 L3.2 9.5 L9.8 9.2 Z" fill="' + fill + '" fill-opacity="' + fillOpacity +
+    '" stroke="' + stroke + '" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+}
 
-function renderTitlesEarnedCard(state) {
+function renderTitlePickerCard(state) {
   var card = document.createElement("div");
   card.className = "card";
   var header = document.createElement("p");
   header.className = "card-header small-caps";
-  header.textContent = "Titles earned";
+  header.textContent = "Title";
   card.appendChild(header);
 
+  var hint = document.createElement("p");
+  hint.className = "field-hint";
+  hint.style.margin = "0 0 10px";
+  hint.textContent = "Pick whichever rank actually matches where you are \u2014 nothing here unlocks on its own.";
+  card.appendChild(hint);
+
   var ladder = state.titlesLadder || SEED_TITLES_LADDER;
-  var overallLevel = overallLevelFromXP(state.lifetimeXP).level;
+  var current = getCurrentTitle(state);
 
   var list = document.createElement("div");
-  ladder.forEach(function (name, idx) {
-    var threshold = idx * 3;
-    if (overallLevel < threshold) return; // not yet earned — omit rather than gray out, no gating text needed
-
-    var row = document.createElement("div");
-    row.className = "title-row";
+  ladder.forEach(function (name) {
+    var selected = (name === current);
+    var row = document.createElement("button");
+    row.type = "button";
+    row.className = "title-row" + (selected ? " selected" : "");
     row.innerHTML =
-      '<span class="title-badge">' + TITLE_BADGE_SVG + '</span>' +
-      '<div class="title-text">' +
-      '<p class="title-name">' + escapeHtml(name) + '</p>' +
-      '<p class="title-sub small-caps">' +
-      (threshold === 0 ? "starting rank" : "reached at Overall Level " + threshold) +
-      '</p></div>';
+      '<span class="title-badge' + (selected ? " selected" : "") + '">' + titleBadgeSVG(selected) + '</span>' +
+      '<span class="title-name">' + escapeHtml(name) + '</span>' +
+      (selected ? '<span class="title-current-tag small-caps">current</span>' : '');
+    row.addEventListener("click", function () {
+      if (state.currentTitle === name) return;
+      state.currentTitle = name;
+      saveState();
+      refreshCurrentScreen();
+    });
     list.appendChild(row);
   });
   card.appendChild(list);

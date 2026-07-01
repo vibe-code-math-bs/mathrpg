@@ -153,6 +153,27 @@
  roundtrip. All green.
  Next: Phase F — quests.js (Bigelow main-quest banner, two parallel track
  seal-timelines, Bosses, Foci management add/edit/archive, Bounty board grid).
+ POST-E FIX (requested): Titles are no longer Level-unlocked. Removed core.js's
+ titleForLevel() (which had derived a title from Overall Level, one rank per 3
+ levels) and replaced it with getCurrentTitle(state), which just reads a new
+ state.currentTitle field the user sets themselves — Level and Title are now fully
+ decoupled, matching the request that title should reflect actual real-life
+ progress, picked manually, not in-app XP. freshState() seeds currentTitle to
+ titlesLadder[0]. character.js's old "Titles earned" list (which had shown/hidden
+ ladder ranks by Level threshold) is now a Title picker: every ladder rank is always
+ shown and tappable (no gating, consistent with the rest of the app), the current
+ pick gets a filled badge + "current" tag, tapping any other rank switches it
+ immediately (saveState + refreshCurrentScreen, no confirm needed — same weight as
+ renaming the player). The Level row still shows "Level X · <Title>" beside the xp
+ glyph, now reading the picked title instead of a computed one. Settings' titlesLadder
+ editor (buildplan §2.5) is still deferred — this fix only changes how the *current*
+ title is chosen, not whether the ladder text itself is editable.
+ Verified with a second jsdom smoke test: fresh state defaults to ladder[0]; pushing
+ lifetimeXP arbitrarily high does NOT move currentTitle (proving Level no longer
+ gates it either direction); the picker renders all 7 ladder ranks unconditionally;
+ tapping a rank (incl. jumping straight to the top rank "Professor" from a low-XP
+ state) updates state.currentTitle, re-renders with exactly one row marked selected,
+ and updates the level row's title text; localStorage roundtrip confirmed. All green.
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

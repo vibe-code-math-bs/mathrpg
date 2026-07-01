@@ -1074,26 +1074,42 @@ textarea {
 .attr-value.rust-val { color: var(--rust); }
 .attr-value.celadon-val { color: var(--celadon); }
 
-/* Titles earned */
+/* Title picker (user-selected, not level-unlocked) */
 .title-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
+  padding: 10px 4px;
   border-bottom: 1px solid var(--rule-faint);
+  width: 100%;
+  background: transparent;
+  border-left: none; border-right: none; border-top: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--chalk);
 }
 .title-row:last-child { border-bottom: none; }
+.title-row:active { background: var(--rule-faint); }
 .title-badge {
   flex: 0 0 auto;
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 1px solid var(--amber-dim);
+  border: 1px solid var(--rule);
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.title-badge.selected { border-color: var(--amber-dim); background: rgba(223, 202, 144, 0.08); }
 .title-badge svg { width: 14px; height: 14px; }
-.title-text { flex: 1; min-width: 0; }
-.title-name { font-size: 14px; font-weight: 500; margin: 0; }
-.title-sub { font-size: 13.5px; color: var(--chalk-dim); margin: 2px 0 0; }
+.title-name { flex: 1; min-width: 0; font-size: 15.5px; font-weight: 500; }
+.title-row.selected .title-name { color: var(--amber); font-weight: 600; }
+.title-current-tag {
+  flex: 0 0 auto;
+  color: var(--amber);
+  border: 1px solid var(--amber-dim);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 13.5px;
+}

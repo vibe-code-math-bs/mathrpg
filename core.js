@@ -63,11 +63,13 @@ function classLevelFromXP(xp) {
   return { level: level, xpIntoLevel: xp - consumed, xpForNextLevel: 150 * (level + 1) };
 }
 
-function titleForLevel(state, level) {
+// Titles are user-selected, not level-unlocked (explicit correction — Level and Title
+// are deliberately decoupled: real-life standing doesn't move in lockstep with in-app
+// XP). state.currentTitle holds whichever ladder entry the user picked in Character's
+// title picker; this just reads it with a safe fallback to the ladder's first rank.
+function getCurrentTitle(state) {
   const ladder = state.titlesLadder || SEED_TITLES_LADDER;
-  // Simple BUILD CHOICE: one title rank every 3 overall levels, capped at ladder length.
-  const idx = Math.min(ladder.length - 1, Math.floor(level / 3));
-  return ladder[idx];
+  return (state.currentTitle && ladder.indexOf(state.currentTitle) !== -1) ? state.currentTitle : ladder[0];
 }
 
 /* ---------- Branch labels (skills-seed.md branch keys -> display names) ---------- */
@@ -167,6 +169,7 @@ function freshState() {
     lifetimeXP: 0,
     classXP: { math: 0, physics: 0 },
     titlesLadder: SEED_TITLES_LADDER.slice(),
+    currentTitle: SEED_TITLES_LADDER[0],
     counters: { exercises: 0, notes: 0, experiments: 0, exposition: 0, papersRead: 0, totalUnits: 0, notePages: 0 },
     dailyActivity: {},
     stats: { technique: 0, rigor: 0, abstraction: 0, intuition: 0, exposition: 0, literature: 0 },
