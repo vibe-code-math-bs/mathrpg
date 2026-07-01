@@ -14,12 +14,12 @@
   --chalk-dim: #9aa39a;
   --rule: rgba(233, 230, 218, 0.14);
   --rule-faint: rgba(233, 230, 218, 0.07);
-  --amber: #d9a86a;
-  --amber-dim: rgba(217, 168, 106, 0.28);
-  --celadon: #8fb7a0;
-  --celadon-dim: rgba(143, 183, 160, 0.25);
-  --rust: #b0664f;
-  --rust-dim: rgba(176, 102, 79, 0.22);
+  --amber: #decc83;
+  --amber-dim: rgba(222, 204, 131, 0.28);
+  --celadon: #8fc7a0;
+  --celadon-dim: rgba(143, 199, 160, 0.25);
+  --rust: #c0664f;
+  --rust-dim: rgba(192, 102, 79, 0.22);
   --grid-size: 34px;
 }
 
