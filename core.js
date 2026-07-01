@@ -126,7 +126,7 @@ function buildSkillGlyph(opts) {
     '<circle cx="22" cy="22" r="18" fill="none" stroke="' + arcColor + '" stroke-width="2.5" ' +
     'stroke-linecap="round" pathLength="100" stroke-dasharray="' + arcLen + ' 100" transform="rotate(-90 22 22)"/>' +
     inner +
-    '<text x="22" y="26" text-anchor="middle" font-family="STIX Two Text, serif" font-size="12" ' +
+    '<text x="22" y="26" text-anchor="middle" font-family="STIX Two Text, serif" font-size="14" ' +
     'font-weight="600" fill="var(--chalk)">' + numeral + '</text>' +
     '</svg>'
   );
