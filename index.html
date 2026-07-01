@@ -2,28 +2,54 @@
 <html lang="en">
 <head>
 <!-- BUILD PROGRESS
- [x] A spine   [x] B glyph+log   [ ] C skills   [ ] D today
+ [x] A spine   [x] B glyph+log   [x] C skills   [ ] D today
  [ ] E character   [ ] F quests   [ ] G polish
- notes: Phase B complete — buildSkillGlyph()/skillGlyphForSkill() in core.js (ring=Level,
- disc=Mastery, hatch=Rust, numeral; arc rotated via SVG transform attr per design spec
- §5 bugfix), plus masteryDepthFromXP/isSkillRusting/BRANCH_LABELS/refreshCurrentScreen
- helpers. log.js has the full Log modal (unit type -> skill grouped by branch -> source
- w/ auto tier weight -> quantity -> optional note -> save) wired to the §4 write fan-out,
- plus foci cadence/streak (step 9) and a reward-beat screen (~500ms XP count-up, stat
- pills, level-up pulse, focus-met line). Last-used skill/source remembered per session.
- Fixed post-ship (2 rounds): (1) Notes no longer auto-bumps papersRead — explicit
- "finishes the paper/chapter" checkbox instead. (2) GENERALIZED beyond Notes: every log
- now has an optional "quantity" field (relabeled per unit type — pages/problems/
- explorations/pages), defaulting to 1, that scales xp/stats/mastery/counters/heatmap
- uniformly: xpGranted = base[unitType] x tierWeight x quantity. This is a deliberate
- DEVIATION from the literal formula text in mathrpg-build-plan.md §3 (which didn't have
- a quantity term) — that doc's pinned-formula section should be updated by hand to match;
- log.js's submitLogEntry is the actual source of truth until then. notePages (Notes-type
- quantity sum) and papersRead (the checkbox) remain separate concepts: magnitude vs.
- completion event. core.js's COUNTER_DEFAULTS + migrateState() backfill notePages for
- any save predating these fixes. Also bumped font sizes across the board (base 17px).
- Next: Phase C — skills.js (branch specimen-card grid using skillGlyphForSkill(),
- synergy full-width cards, skill detail with editable roadmap checklist, legend box).
+ notes: Phase C complete — skills.js. renderSkills() groups state.skills by branch
+ (getBranchOrder() walks SEED_BRANCHES first, then appends any branches the user has
+ since created), each branch a <section> with a header row (name + optional tag +
+ "subtopics N/total" completion meter) over a 2-col specimen-card grid
+ (skillGlyphForSkill() at 64px, name, "Lv X · Mastery Y" status line color-matched to
+ rust/active state, pills for rusty/active + priorityGrowth/activeResearch flags).
+ Skills carrying a seed synergyNote get a full-width (grid-column:span 2) italic
+ synergy card right after their own card, plus a ✦ mark top-right on the card itself
+ — SIMPLIFICATION: the ✦/synergy-card always render when synergyNote is present rather
+ than computing live prereq-met state, since the seed only carries prose, not
+ structured prereq refs; revisit if that matters later. isSkillActive() (touched
+ <=14 days OR targeted by an active focus) drives the celadon disc + "active" pill,
+ mirroring the rust hatch/pill from isSkillRusting() (core.js, Phase B). Dashed
+ glyph-legend box at the bottom (ring/disc/hatch samples). A dashed "+ Add a new
+ skill" affordance opens a modal to register a brand-new skill node: name, branch
+ (existing, or "+ New branch…" which slugifies a typed name), class (math/physics/
+ both), maintenance flag, and an optional starting roadmap textarea that reuses the
+ seed file's own "- [x] / [ ]" line convention (parseRoadmapText()).
+ Tapping any card opens the Skill Detail modal (reuses the Phase B .modal-overlay/
+ .modal-card chrome): renamable title (pencil -> inline input -> blur/Enter commits),
+ glyph + "Lv X / N subtopics" + Mastery level + a hand-rolled (non-native, per design
+ spec §11) amber progress bar to the next Mastery level, a rust-status line when
+ applicable, the skill's optional note/synergy text, then a fully editable roadmap
+ list — checkbox (check/uncheck recomputes skill.level live), pencil (inline rename),
+ × (remove, with a confirm()) — plus an add-subtopic row at the bottom, then that
+ skill's unit history (newest first, source/xp/quantity/note, capped at 15 + a
+ "+N earlier" line). All mutations call saveState() immediately; the underlying
+ Skills grid re-renders via refreshCurrentScreen() when the modal closes.
+ Verified with a jsdom smoke test (load all 8 scripts, open a skill, toggle/add/
+ rename/delete a subtopic, rename the skill, create a brand-new skill incl. a brand-
+ new branch via both bare "[x]" and dash-prefixed "- [x]" seed-style lines, confirm
+ it appears in the grid, confirm localStorage roundtrip) — all green; caught and
+ fixed one real bug (dash-prefixed roadmap lines weren't parsing before the fix —
+ order of dash-strip vs. checkbox-marker-strip was swapped).
+ Deferred (cosmetic, not data-flow): the design spec's Skills-only top-bar filter-
+ pill row (§4) — branch sections already give a gate-free full view of the tree, so
+ this can slot in later without touching skills.js's rendering logic.
+ New shared-ish helpers that live locally in skills.js (kept file-local per build-
+ plan §1's one-file-per-screen rule, so they're intentionally small duplicates of
+ same-named helpers in log.js/settings.js, not shared imports): escapeHtml,
+ capitalize, buildCloseButton (renamed from log.js's buildModalCloseButton to avoid
+ any confusion, identical purpose).
+ Next: Phase D — today.js (activity heatmap, date hero, streak dots, XP strip using
+ the Level-ring half of the skill glyph, foci-due rows, rust alerts reusing
+ isSkillRusting()/isSkillActive() from skills.js, today's logged units, daily-haul
+ roll-up, quick-log shortcuts).
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
