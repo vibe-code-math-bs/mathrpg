@@ -1,3 +1,5 @@
+vibe coded bullshit for self-use.
+
 # MathRPG
 
 A character sheet for a working mathematician — a personal, single-user life-RPG that
