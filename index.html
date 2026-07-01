@@ -50,6 +50,15 @@
  the Level-ring half of the skill glyph, foci-due rows, rust alerts reusing
  isSkillRusting()/isSkillActive() from skills.js, today's logged units, daily-haul
  roll-up, quick-log shortcuts).
+ Post-C tweaks: (1) buildSkillGlyph() (core.js) — the Level ring's arc now renders
+ celadon instead of chalk-white once fraction>=1 (every roadmap subtopic done),
+ applies wherever the shared glyph is used (Skills cards/detail, log.js preview +
+ reward beat) since it's keyed off the generic fraction param, not skill-specific
+ state. In-glyph numeral SVG font-size 11->12 to match (2). (2) Base font-size
+ 17->18px plus every other explicit font-size in styles.css bumped +1px uniformly
+ (48 declarations) — a flat shift rather than a proportional scale, so relative
+ hierarchy/spacing between sizes is preserved exactly; em-based sizing (e.g.
+ .skill-card-name's min-height:2.6em) auto-adjusts, no manual follow-up needed there.
 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

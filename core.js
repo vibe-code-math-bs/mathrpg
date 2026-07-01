@@ -103,6 +103,9 @@ function buildSkillGlyph(opts) {
   const arcLen = (fraction * 100).toFixed(1);
   const numeral = (opts.numeral === undefined || opts.numeral === null) ? "" : opts.numeral;
   const showMastery = opts.showMastery !== false;
+  // Ring at max (every roadmap subtopic done) reads as a small win — arc turns
+  // celadon instead of chalk-white so a maxed skill is legible at a glance.
+  const arcColor = fraction >= 1 ? "var(--celadon)" : "var(--chalk)";
 
   let inner = "";
   if (showMastery) {
@@ -120,10 +123,10 @@ function buildSkillGlyph(opts) {
   return (
     '<svg viewBox="0 0 44 44" width="' + size + '" height="' + size + '" class="skill-glyph" aria-hidden="true">' +
     '<circle cx="22" cy="22" r="18" fill="none" stroke="var(--rule)" stroke-width="2.5" pathLength="100"/>' +
-    '<circle cx="22" cy="22" r="18" fill="none" stroke="var(--chalk)" stroke-width="2.5" ' +
+    '<circle cx="22" cy="22" r="18" fill="none" stroke="' + arcColor + '" stroke-width="2.5" ' +
     'stroke-linecap="round" pathLength="100" stroke-dasharray="' + arcLen + ' 100" transform="rotate(-90 22 22)"/>' +
     inner +
-    '<text x="22" y="26" text-anchor="middle" font-family="STIX Two Text, serif" font-size="11" ' +
+    '<text x="22" y="26" text-anchor="middle" font-family="STIX Two Text, serif" font-size="12" ' +
     'font-weight="600" fill="var(--chalk)">' + numeral + '</text>' +
     '</svg>'
   );
